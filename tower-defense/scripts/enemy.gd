@@ -14,6 +14,8 @@ var path_progress: float = 0.0
 var reached_end: bool = false
 var slowed: float = 0.0
 var slow_timer: float = 0.0
+var is_boss: bool = false
+var boss_data: Dictionary = {}
 
 var game_node: Node
 

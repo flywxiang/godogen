@@ -35,7 +35,7 @@ offset_top = 100.0
 offset_right = 200.0
 offset_bottom = 140.0
 theme_override_font_sizes/font_size = 24
-text = "🌊 波次: 0"
+text = "🌊 波次: 0/10"
 
 [node name="MessageLabel" type="Label" parent="UI"]
 anchors_horizontal_center = 0.5
@@ -45,6 +45,90 @@ offset_bottom = 60.0
 theme_override_colors/font_color = Color(1, 1, 0.2, 1)
 theme_override_font_sizes/font_size = 28
 horizontal_alignment = 1
+
+[node name="LevelSelect" type="Control" parent="UI"]
+visible = false
+anchors_horizontal_center = 0.5
+anchors_vertical_center = 0.5
+
+[node name="LevelSelectPanel" type="PanelContainer" parent="UI/LevelSelect"]
+anchors_horizontal_center = 0.5
+anchors_vertical_center = 0.5
+offset_left = -400.0
+offset_top = -300.0
+offset_right = 400.0
+offset_bottom = 300.0
+
+[node name="VBox" type="VBoxContainer" parent="UI/LevelSelect/LevelSelectPanel"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="UI/LevelSelect/LevelSelectPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
+theme_override_font_sizes/font_size = 36
+horizontal_alignment = 1
+text = "🎮 选择关卡"
+
+[node name="Grid" type="GridContainer" parent="UI/LevelSelect/LevelSelectPanel/VBox"]
+layout_mode = 2
+columns = 5
+
+[node name="Level1" type="Button" parent="UI/LevelSelect/LevelSelectPanel/VBox/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 14
+text = "第1关
+新手村
+训练场"
+
+[node name="Level2" type="Button" parent="UI/LevelSelect/LevelSelectPanel/VBox/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 14
+text = "第2关
+森林要塞
+装甲敌人"
+
+[node name="Level3" type="Button" parent="UI/LevelSelect/LevelSelectPanel/VBox/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 14
+text = "第3关
+魔法山谷
+魔抗敌人"
+
+[node name="Level4" type="Button" parent="UI/LevelSelect/LevelSelectPanel/VBox/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 14
+text = "第4关
+钢铁前线
+全面强化"
+
+[node name="Level5" type="Button" parent="UI/LevelSelect/LevelSelectPanel/VBox/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 14
+text = "第5关
+最终决战
+龙领主"
+
+[node name="BossInfo" type="Label" parent="UI/LevelSelect/LevelSelectPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.6, 0.2, 1)
+theme_override_font_sizes/font_size = 16
+horizontal_alignment = 1
+text = "⚠️ 每5关有BOSS！"
+
+[node name="BackButton" type="Button" parent="UI/LevelSelect/LevelSelectPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+text = "按ESC返回游戏"
 
 [node name="TowerPanel" type="PanelContainer" parent="UI"]
 offset_left = 20.0
@@ -84,6 +168,14 @@ theme_override_colors/font_color = Color(0.2, 1, 0.2, 1)
 theme_override_font_sizes/font_size = 20
 text = "▶ 开始波次"
 
+[node name="MenuButton" type="Button" parent="UI"]
+offset_left = 20.0
+offset_top = 520.0
+offset_right = 200.0
+offset_bottom = 560.0
+theme_override_font_sizes/font_size = 18
+text = "📋 关卡选择"
+
 [node name="LegendPanel" type="PanelContainer" parent="UI"]
 offset_left = 1100.0
 offset_top = 20.0
@@ -96,7 +188,8 @@ theme_override_font_sizes/font_size = 14
 text = "👹 普通
 🛡️ 装甲
 🔮 魔抗
-⚡ 快速"
+⚡ 快速
+👑 BOSS"
 
 [node name="GameOverPanel" type="PanelContainer" parent="UI"]
 visible = false
