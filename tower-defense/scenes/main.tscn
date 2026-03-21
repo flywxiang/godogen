@@ -19,7 +19,7 @@ offset_top = 20.0
 offset_right = 200.0
 offset_bottom = 60.0
 theme_override_font_sizes/font_size = 24
-text = "Gold: 200"
+text = "💰 金币: 200"
 
 [node name="LivesLabel" type="Label" parent="UI"]
 offset_left = 20.0
@@ -27,7 +27,7 @@ offset_top = 60.0
 offset_right = 200.0
 offset_bottom = 100.0
 theme_override_font_sizes/font_size = 24
-text = "Lives: 20"
+text = "❤️ 生命: 20"
 
 [node name="WaveLabel" type="Label" parent="UI"]
 offset_left = 20.0
@@ -35,7 +35,7 @@ offset_top = 100.0
 offset_right = 200.0
 offset_bottom = 140.0
 theme_override_font_sizes/font_size = 24
-text = "Wave: 0"
+text = "🌊 波次: 0"
 
 [node name="MessageLabel" type="Label" parent="UI"]
 anchors_horizontal_center = 0.5
@@ -49,29 +49,54 @@ horizontal_alignment = 1
 [node name="TowerPanel" type="PanelContainer" parent="UI"]
 offset_left = 20.0
 offset_top = 150.0
-offset_right = 180.0
-offset_bottom = 350.0
+offset_right = 200.0
+offset_bottom = 450.0
 
 [node name="ArrowTower" type="Button" parent="UI/TowerPanel"]
 layout_mode = 2
-text = "Arrow (50g)"
+text = "🏹 箭塔 (50g)"
 
 [node name="CannonTower" type="Button" parent="UI/TowerPanel"]
 layout_mode = 2
-text = "Cannon (100g)"
+text = "💣 炮塔 (100g)"
 
 [node name="MagicTower" type="Button" parent="UI/TowerPanel"]
 layout_mode = 2
-text = "Magic (80g)"
+text = "✨ 魔塔 (80g)"
+
+[node name="UpgradeTower" type="Button" parent="UI/TowerPanel"]
+layout_mode = 2
+text = "⬆️ 升级塔"
+theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
+
+[node name="InfoLabel" type="Label" parent="UI/TowerPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 12
+text = "克制: 箭→快速 炮→装甲 魔→快速"
 
 [node name="StartWaveButton" type="Button" parent="UI"]
 offset_left = 20.0
-offset_top = 370.0
-offset_right = 180.0
-offset_bottom = 410.0
+offset_top = 470.0
+offset_right = 200.0
+offset_bottom = 510.0
 theme_override_colors/font_color = Color(0.2, 1, 0.2, 1)
 theme_override_font_sizes/font_size = 20
-text = "Start Wave"
+text = "▶ 开始波次"
+
+[node name="LegendPanel" type="PanelContainer" parent="UI"]
+offset_left = 1100.0
+offset_top = 20.0
+offset_right = 1280.0
+offset_bottom = 150.0
+
+[node name="LegendLabel" type="Label" parent="UI/LegendPanel"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "👹 普通
+🛡️ 装甲
+🔮 魔抗
+⚡ 快速"
 
 [node name="GameOverPanel" type="PanelContainer" parent="UI"]
 visible = false
@@ -88,4 +113,4 @@ theme_override_colors/font_color = Color(1, 0.2, 0.2, 1)
 theme_override_font_sizes/font_size = 36
 horizontal_alignment = 1
 vertical_alignment = 1
-text = "GAME OVER"
+text = "游戏结束"

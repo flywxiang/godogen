@@ -1,7 +1,7 @@
 extends Node2D
 
 var target: Node2D = null
-var tower_data: Dictionary = {}
+var projectile_data: Dictionary = {}
 var speed: float = 400.0
 var lifetime: float = 0.0
 var max_lifetime: float = 3.0
@@ -13,9 +13,9 @@ var expired: bool = false
 func setup(from: Vector2, to: Node2D, data: Dictionary) -> void:
 	global_position = from
 	target = to
-	tower_data = data
+	projectile_data = data
 	sprite.color = data.color
-	sprite.size = Vector2(6, 6)
+	sprite.size = Vector2(6 + data.get("tower_level", 1) * 2, 6 + data.get("tower_level", 1) * 2)
 
 func _process(delta: float) -> void:
 	lifetime += delta
@@ -41,10 +41,15 @@ func _process(delta: float) -> void:
 
 func _on_hit() -> void:
 	if is_instance_valid(target):
-		target.take_damage(tower_data.damage)
+		var damage_type = projectile_data.get("damage_type", "physical")
+		var damage = projectile_data.get("damage", 10)
+		
+		# Call appropriate damage function
+		if target.has_method("take_damage"):
+			target.take_damage(damage, damage_type)
 		
 		# Apply slow if magic tower
-		if tower_data.has("slow"):
-			target.apply_slow(tower_data.slow, 2.0)
+		if projectile_data.get("effective_against") == "fast":
+			target.apply_slow(0.3, 2.0)
 	
 	queue_free()
