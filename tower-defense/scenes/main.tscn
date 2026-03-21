@@ -1,0 +1,91 @@
+[gd_scene load_steps=3 format=3 uid="uid://cqvxm0main01"]
+
+[ext_resource type="Script" path="res://scripts/game.gd" id="1_game"]
+[ext_resource type="Script" path="res://scripts/ui.gd" id="2_ui"]
+
+[node name="Game" type="Node2D"]
+script = ExtResource("1_game")
+
+[node name="PathLine" type="Line2D" parent="."]
+width = 40.0
+default_color = Color(0.3, 0.3, 0.2, 0.8)
+joint_mode = 2
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="GoldLabel" type="Label" parent="UI"]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 200.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 24
+text = "Gold: 200"
+
+[node name="LivesLabel" type="Label" parent="UI"]
+offset_left = 20.0
+offset_top = 60.0
+offset_right = 200.0
+offset_bottom = 100.0
+theme_override_font_sizes/font_size = 24
+text = "Lives: 20"
+
+[node name="WaveLabel" type="Label" parent="UI"]
+offset_left = 20.0
+offset_top = 100.0
+offset_right = 200.0
+offset_bottom = 140.0
+theme_override_font_sizes/font_size = 24
+text = "Wave: 0"
+
+[node name="MessageLabel" type="Label" parent="UI"]
+anchors_horizontal_center = 0.5
+offset_top = 20.0
+offset_right = 1200.0
+offset_bottom = 60.0
+theme_override_colors/font_color = Color(1, 1, 0.2, 1)
+theme_override_font_sizes/font_size = 28
+horizontal_alignment = 1
+
+[node name="TowerPanel" type="PanelContainer" parent="UI"]
+offset_left = 20.0
+offset_top = 150.0
+offset_right = 180.0
+offset_bottom = 350.0
+
+[node name="ArrowTower" type="Button" parent="UI/TowerPanel"]
+layout_mode = 2
+text = "Arrow (50g)"
+
+[node name="CannonTower" type="Button" parent="UI/TowerPanel"]
+layout_mode = 2
+text = "Cannon (100g)"
+
+[node name="MagicTower" type="Button" parent="UI/TowerPanel"]
+layout_mode = 2
+text = "Magic (80g)"
+
+[node name="StartWaveButton" type="Button" parent="UI"]
+offset_left = 20.0
+offset_top = 370.0
+offset_right = 180.0
+offset_bottom = 410.0
+theme_override_colors/font_color = Color(0.2, 1, 0.2, 1)
+theme_override_font_sizes/font_size = 20
+text = "Start Wave"
+
+[node name="GameOverPanel" type="PanelContainer" parent="UI"]
+visible = false
+anchors_horizontal_center = 0.5
+anchors_vertical_center = 0.5
+offset_left = -150.0
+offset_top = -80.0
+offset_right = 150.0
+offset_bottom = 80.0
+
+[node name="Label" type="Label" parent="UI/GameOverPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.2, 0.2, 1)
+theme_override_font_sizes/font_size = 36
+horizontal_alignment = 1
+vertical_alignment = 1
+text = "GAME OVER"
