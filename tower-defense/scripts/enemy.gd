@@ -13,10 +13,13 @@ var slow_timer: float = 0.0
 @onready var health_bar: ProgressBar = $HealthBar
 @onready var enemy_sprite: ColorRect = $EnemySprite
 
+var game_node: Node
+
 func _ready() -> void:
 	health_bar.max_value = max_health
 	health_bar.value = health
 	enemy_sprite.color = Color(0.9, 0.3, 0.3)
+	game_node = get_parent()
 
 func _process(delta: float) -> void:
 	if reached_end:
@@ -33,18 +36,22 @@ func _process(delta: float) -> void:
 	# Move along path
 	path_progress += current_speed * delta
 	
-	if path_index >= len(get_parent().path_points) - 1:
+	if not is_instance_valid(game_node):
+		return
+	
+	var path = game_node.path_points
+	if path_index >= len(path) - 1:
 		reached_end = true
 		return
 	
-	var p1 = get_parent().path_points[path_index]
-	var p2 = get_parent().path_points[path_index + 1]
+	var p1 = path[path_index]
+	var p2 = path[path_index + 1]
 	var segment_length = p1.distance_to(p2)
 	
 	if path_progress >= segment_length:
 		path_progress -= segment_length
 		path_index += 1
-		if path_index >= len(get_parent().path_points) - 1:
+		if path_index >= len(path) - 1:
 			reached_end = true
 			return
 	
@@ -65,9 +72,8 @@ func apply_slow(amount: float, duration: float) -> void:
 
 func die() -> void:
 	# Award gold
-	var game = get_parent()
-	if game and has_node(".."):
-		game.gold += reward
-		game._update_ui()
+	if is_instance_valid(game_node):
+		game_node.gold += reward
+		game_node._update_ui()
 	
 	queue_free()

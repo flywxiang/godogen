@@ -33,10 +33,11 @@ var path_points: Array = [
 @onready var wave_label: Label = $UI/WaveLabel
 @onready var message_label: Label = $UI/MessageLabel
 @onready var tower_panel: Control = $UI/TowerPanel
-@onready var path_line: Line2D = $PathLine
+var path_line: Line2D
 
 func _ready() -> void:
 	randomize()
+	path_line = $PathLine
 	_setup_path()
 	_update_ui()
 	show_message("Click tower button to select, then click on map to place!")
