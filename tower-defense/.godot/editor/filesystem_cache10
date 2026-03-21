@@ -1,0 +1,17 @@
+63f7b34db8d8cdea90c76aacccf841ec
+::res://::1774103151
+icon.svg::CompressedTexture2D::7308028338937096389::1774079069::1774103155::1::::<><><>0<>0<>7f1fcbd53471dff210faba179d8f5e11<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
+::res://assets/::1774078897
+::res://resources/::1774078897
+::res://scenes/::1774079056
+enemy.tscn::PackedScene::6775723788::1774099693::0::1::::<><><>0<>0<><>::res://scripts/enemy.gd
+main.tscn::PackedScene::174724530894797088::1774099738::0::1::::<><><>0<>0<><>::res://scripts/game.gd<>res://scripts/ui.gd
+projectile.tscn::PackedScene::704810608::1774079056::0::1::::<><><>0<>0<><>::res://scripts/projectile.gd
+tower.tscn::PackedScene::30016956976::1774097764::0::1::::<><><>0<>0<><>::res://scripts/tower.gd
+::res://scripts/::1774103000
+enemy.gd::GDScript::3802273138460287260::1774099656::0::1::::<>Node2D<><>0<>0<><>::
+game.gd::GDScript::8331978226427715742::1774103037::0::1::::<>Node2D<><>0<>0<><>::
+levels.gd::GDScript::2286378967899526855::1774099843::0::1::::<>Node<><>0<>0<><>::
+projectile.gd::GDScript::8770515242300716743::1774097747::0::1::::<>Node2D<><>0<>0<><>::
+tower.gd::GDScript::2118731938664450679::1774097728::0::1::::Tower<>Node2D<><>0<>0<><>::
+ui.gd::GDScript::8964602706271700137::1774099779::0::1::::<>Control<><>0<>0<><>::

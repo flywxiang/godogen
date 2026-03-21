@@ -6,58 +6,84 @@
 [node name="Game" type="Node2D"]
 script = ExtResource("1_game")
 
+[node name="Background" type="ColorRect" parent="."]
+z_index = -10
+offset_right = 1280.0
+offset_bottom = 720.0
+color = Color(0.1, 0.15, 0.2, 1)
+
 [node name="PathLine" type="Line2D" parent="."]
-width = 40.0
-default_color = Color(0.3, 0.3, 0.2, 0.8)
+z_index = 1
+width = 50.0
+default_color = Color(0.2, 0.25, 0.3, 0.9)
 joint_mode = 2
 
 [node name="UI" type="CanvasLayer" parent="."]
 
-[node name="GoldLabel" type="Label" parent="UI"]
-offset_left = 20.0
-offset_top = 20.0
-offset_right = 200.0
-offset_bottom = 60.0
-theme_override_font_sizes/font_size = 24
-text = "💰 金币: 200"
+[node name="TopBar" type="PanelContainer" parent="UI"]
+anchors_horizontal_center = 0.5
+offset_left = 400.0
+offset_top = 10.0
+offset_right = 880.0
+offset_bottom = 70.0
 
-[node name="LivesLabel" type="Label" parent="UI"]
-offset_left = 20.0
-offset_top = 60.0
-offset_right = 200.0
-offset_bottom = 100.0
-theme_override_font_sizes/font_size = 24
-text = "❤️ 生命: 20"
+[node name="GoldLabel" type="Label" parent="UI/TopBar"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+theme_override_font_sizes/font_size = 28
+horizontal_alignment = 1
+vertical_alignment = 1
+text = "💰 200"
 
-[node name="WaveLabel" type="Label" parent="UI"]
-offset_left = 20.0
-offset_top = 100.0
-offset_right = 200.0
-offset_bottom = 140.0
-theme_override_font_sizes/font_size = 24
-text = "🌊 波次: 0/10"
+[node name="LivesLabel" type="Label" parent="UI/TopBar"]
+layout_mode = 2
+offset_left = 120.0
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+theme_override_font_sizes/font_size = 28
+horizontal_alignment = 1
+vertical_alignment = 1
+text = "❤️ 20"
+
+[node name="WaveLabel" type="Label" parent="UI/TopBar"]
+layout_mode = 2
+offset_left = 240.0
+theme_override_colors/font_color = Color(0.4, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 28
+horizontal_alignment = 1
+vertical_alignment = 1
+text = "🌊 0/10"
 
 [node name="MessageLabel" type="Label" parent="UI"]
 anchors_horizontal_center = 0.5
-offset_top = 20.0
-offset_right = 1200.0
-offset_bottom = 60.0
-theme_override_colors/font_color = Color(1, 1, 0.2, 1)
-theme_override_font_sizes/font_size = 28
+anchors_vertical_center = 0.5
+offset_left = -200.0
+offset_top = -300.0
+offset_right = 200.0
+offset_bottom = -250.0
+theme_override_colors/font_color = Color(1, 0.95, 0.2, 1)
+theme_override_font_sizes/font_size = 32
 horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="LevelSelect" type="Control" parent="UI"]
-visible = false
 anchors_horizontal_center = 0.5
 anchors_vertical_center = 0.5
+
+[node name="LevelSelectBG" type="ColorRect" parent="UI/LevelSelect"]
+anchors_vertical_center = 0.5
+offset_left = -450.0
+offset_top = -300.0
+offset_right = 450.0
+offset_bottom = 300.0
+color = Color(0.1, 0.12, 0.18, 0.95)
 
 [node name="LevelSelectPanel" type="PanelContainer" parent="UI/LevelSelect"]
 anchors_horizontal_center = 0.5
 anchors_vertical_center = 0.5
 offset_left = -400.0
-offset_top = -300.0
+offset_top = -280.0
 offset_right = 400.0
-offset_bottom = 300.0
+offset_bottom = 280.0
 
 [node name="VBox" type="VBoxContainer" parent="UI/LevelSelect/LevelSelectPanel"]
 layout_mode = 2
@@ -65,7 +91,7 @@ layout_mode = 2
 [node name="Title" type="Label" parent="UI/LevelSelect/LevelSelectPanel/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 40
 horizontal_alignment = 1
 text = "🎮 选择关卡"
 
@@ -77,7 +103,9 @@ columns = 5
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.1, 0.1, 0.1, 1)
+theme_override_colors/font_hover_color = Color(0.2, 0.2, 0.2, 1)
+theme_override_font_sizes/font_size = 16
 text = "第1关
 新手村
 训练场"
@@ -86,7 +114,7 @@ text = "第1关
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 16
 text = "第2关
 森林要塞
 装甲敌人"
@@ -95,7 +123,7 @@ text = "第2关
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 16
 text = "第3关
 魔法山谷
 魔抗敌人"
@@ -104,7 +132,7 @@ text = "第3关
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 16
 text = "第4关
 钢铁前线
 全面强化"
@@ -113,7 +141,7 @@ text = "第4关
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 16
 text = "第5关
 最终决战
 龙领主"
@@ -121,70 +149,79 @@ text = "第5关
 [node name="BossInfo" type="Label" parent="UI/LevelSelect/LevelSelectPanel/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.6, 0.2, 1)
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 18
 horizontal_alignment = 1
 text = "⚠️ 每5关有BOSS！"
 
 [node name="BackButton" type="Button" parent="UI/LevelSelect/LevelSelectPanel/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
-text = "按ESC返回游戏"
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 18
+text = "点击关卡开始游戏"
 
 [node name="TowerPanel" type="PanelContainer" parent="UI"]
-offset_left = 20.0
-offset_top = 150.0
+offset_left = 10.0
+offset_top = 100.0
 offset_right = 200.0
 offset_bottom = 450.0
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
 
 [node name="ArrowTower" type="Button" parent="UI/TowerPanel"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.1, 0.4, 0.1, 1)
+theme_override_font_sizes/font_size = 18
 text = "🏹 箭塔 (50g)"
 
 [node name="CannonTower" type="Button" parent="UI/TowerPanel"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.3, 0.1, 1)
+theme_override_font_sizes/font_size = 18
 text = "💣 炮塔 (100g)"
 
 [node name="MagicTower" type="Button" parent="UI/TowerPanel"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.1, 0.6, 1)
+theme_override_font_sizes/font_size = 18
 text = "✨ 魔塔 (80g)"
 
 [node name="UpgradeTower" type="Button" parent="UI/TowerPanel"]
 layout_mode = 2
-text = "⬆️ 升级塔"
 theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
+theme_override_font_sizes/font_size = 18
+text = "⬆️ 升级塔"
 
 [node name="InfoLabel" type="Label" parent="UI/TowerPanel"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+theme_override_font_sizes/font_size = 14
 text = "克制: 箭→快速 炮→装甲 魔→快速"
 
 [node name="StartWaveButton" type="Button" parent="UI"]
-offset_left = 20.0
+offset_left = 10.0
 offset_top = 470.0
 offset_right = 200.0
-offset_bottom = 510.0
+offset_bottom = 520.0
 theme_override_colors/font_color = Color(0.2, 1, 0.2, 1)
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 22
 text = "▶ 开始波次"
 
 [node name="MenuButton" type="Button" parent="UI"]
-offset_left = 20.0
-offset_top = 520.0
+offset_left = 10.0
+offset_top = 530.0
 offset_right = 200.0
-offset_bottom = 560.0
+offset_bottom = 580.0
 theme_override_font_sizes/font_size = 18
 text = "📋 关卡选择"
 
 [node name="LegendPanel" type="PanelContainer" parent="UI"]
-offset_left = 1100.0
-offset_top = 20.0
-offset_right = 1280.0
-offset_bottom = 150.0
+offset_left = 1080.0
+offset_top = 80.0
+offset_right = 1270.0
+offset_bottom = 200.0
 
 [node name="LegendLabel" type="Label" parent="UI/LegendPanel"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 16
 text = "👹 普通
 🛡️ 装甲
 🔮 魔抗
@@ -195,15 +232,15 @@ text = "👹 普通
 visible = false
 anchors_horizontal_center = 0.5
 anchors_vertical_center = 0.5
-offset_left = -150.0
-offset_top = -80.0
-offset_right = 150.0
-offset_bottom = 80.0
+offset_left = -180.0
+offset_top = -100.0
+offset_right = 180.0
+offset_bottom = 100.0
 
 [node name="Label" type="Label" parent="UI/GameOverPanel"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.2, 0.2, 1)
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 42
 horizontal_alignment = 1
 vertical_alignment = 1
 text = "游戏结束"

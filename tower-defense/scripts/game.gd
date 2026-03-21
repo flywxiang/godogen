@@ -28,12 +28,17 @@ var selected_tower_type: String = ""
 var towers: Array = []
 var enemies: Array = []
 var projectiles: Array = []
-var level_progress: Array = []  # 已通过的关卡
+var level_progress: Array = [1]
 var selected_level: int = 1
 var showing_level_select: bool = true
 var level_completed: bool = false
 var boss_spawned: bool = false
-var boss: Node = null
+var particles: Array = []
+
+# Touch state
+var touch_start: Vector2 = Vector2.ZERO
+var dragging: bool = false
+var drag_offset: Vector2 = Vector2.ZERO
 
 # Path waypoints
 var path_points: Array = [
@@ -43,14 +48,12 @@ var path_points: Array = [
 	Vector2(1300, 300)
 ]
 
-# Tower definitions
 const TOWER_TYPES = {
 	"arrow": {"cost": 50, "damage": 10, "range": 150, "fire_rate": 1.2, "color": Color(0.2, 0.6, 0.2), "name": "箭塔", "damage_type": "physical", "effective_against": "light"},
 	"cannon": {"cost": 100, "damage": 30, "range": 120, "fire_rate": 0.5, "color": Color(0.8, 0.4, 0.1), "name": "炮塔", "damage_type": "explosive", "effective_against": "armor"},
 	"magic": {"cost": 80, "damage": 15, "range": 180, "fire_rate": 0.8, "color": Color(0.4, 0.2, 0.8), "name": "魔塔", "damage_type": "magic", "effective_against": "fast"}
 }
 
-# Enemy types
 const ENEMY_TYPES = {
 	"normal": {"health": 100, "speed": 100, "reward": 10, "armor": 0, "magic_resist": 0, "name": "普通", "icon": "👹"},
 	"armor": {"health": 200, "speed": 60, "reward": 25, "armor": 0.5, "magic_resist": 0, "name": "装甲", "icon": "🛡️"},
@@ -58,34 +61,32 @@ const ENEMY_TYPES = {
 	"fast": {"health": 60, "speed": 160, "reward": 15, "armor": 0, "magic_resist": 0, "name": "快速", "icon": "⚡"}
 }
 
-# Upgrade system
-const UPGRADE_COST_MULTIPLIER = 0.5
-const UPGRADE_BONUS = 0.3
 const MAX_LEVEL = 3
 
-@onready var gold_label: Label = $UI/GoldLabel
-@onready var lives_label: Label = $UI/LivesLabel
-@onready var wave_label: Label = $UI/WaveLabel
+@onready var gold_label: Label = $UI/TopBar/GoldLabel
+@onready var lives_label: Label = $UI/TopBar/LivesLabel
+@onready var wave_label: Label = $UI/TopBar/WaveLabel
 @onready var message_label: Label = $UI/MessageLabel
 @onready var path_line: Line2D = $PathLine
 @onready var level_select: Control = $UI/LevelSelect
 @onready var level_select_panel: Control = $UI/LevelSelect/LevelSelectPanel
 
-func _ready() -> void:
+func _ready():
 	randomize()
 	path_line = $PathLine
 	_setup_path()
 	_setup_level_progress()
 	show_level_select()
 	_update_ui()
+	
+	# 移动端设置
 
-func _setup_path() -> void:
+func _setup_path():
 	path_line.clear_points()
 	for point in path_points:
 		path_line.add_point(point)
 
-func _setup_level_progress() -> void:
-	# 加载保存的进度
+func _setup_level_progress():
 	var save_file = FileAccess.open("user://level_progress.save", FileAccess.READ)
 	if save_file:
 		var data = JSON.parse_string(save_file.get_as_text())
@@ -93,41 +94,39 @@ func _setup_level_progress() -> void:
 			level_progress = data
 		save_file.close()
 	else:
-		level_progress = [1]  # 默认解锁第1关
+		level_progress = [1]
 
-func save_level_progress() -> void:
+func save_level_progress():
 	var save_file = FileAccess.open("user://level_progress.save", FileAccess.WRITE)
 	if save_file:
 		save_file.store_string(JSON.stringify(level_progress))
 		save_file.close()
 
-func show_level_select() -> void:
+func show_level_select():
 	showing_level_select = true
 	level_select.visible = true
 	level_select_panel.visible = true
 	update_level_buttons()
 
-func hide_level_select() -> void:
+func hide_level_select():
 	showing_level_select = false
 	level_select.visible = false
 	level_select_panel.visible = false
 
-func update_level_buttons() -> void:
+func update_level_buttons():
 	for i in range(1, 6):
 		var btn = level_select.find_child("Level%d" % i, true, false)
 		if btn:
 			var level_data = LVL(i)
 			btn.text = "第%d关\n%s\n%s" % [i, level_data["n"], level_data["d"]]
-			
-			# 设置颜色
 			if i in level_progress:
-				btn.modulate = Color(0.7, 1, 0.7)  # 已通过-绿色
+				btn.modulate = Color(0.7, 1, 0.7)
 			elif i <= level_progress[-1] + 1:
-				btn.modulate = Color(1, 1, 1)  # 可进入-白色
+				btn.modulate = Color(1, 1, 1)
 			else:
-				btn.modulate = Color(0.4, 0.4, 0.4)  # 锁定-灰色
+				btn.modulate = Color(0.4, 0.4, 0.4)
 
-func select_level(level_num: int) -> void:
+func select_level(level_num: int):
 	if level_num > level_progress[-1] + 1:
 		show_message("请先通关前面的关卡！")
 		return
@@ -145,7 +144,6 @@ func select_level(level_num: int) -> void:
 	enemies = []
 	projectiles = []
 	
-	# 清理旧敌人和塔
 	for t in get_tree().get_nodes_in_group("towers"):
 		t.queue_free()
 	for e in get_tree().get_nodes_in_group("enemies"):
@@ -157,7 +155,50 @@ func select_level(level_num: int) -> void:
 	show_message("第%d关：%s 开始！" % [level_num, data["n"]])
 	_update_ui()
 
-func _process(_delta: float) -> void:
+# 触摸事件处理
+func _input(event: InputEvent):
+	# 触摸/点击开始
+	if event is InputEventScreenTouch or event is InputEventMouseButton:
+		if event.pressed:
+			touch_start = event.position if event is InputEventScreenTouch else event.position
+			dragging = true
+		else:
+			# 触摸/点击释放
+			if dragging:
+				handle_tap(event.position if event is InputEventScreenTouch else event.position)
+			dragging = false
+	
+	# 触摸/点击移动
+	if event is InputEventScreenDrag or (event is InputEventMouseMotion and dragging):
+		var pos = event.position if event is InputEventScreenDrag else event.position
+		# 拖拽逻辑（如果需要）
+		pass
+	
+	# ESC返回菜单
+	if event.is_action_pressed("ui_cancel"):
+		if not showing_level_select and not game_over:
+			show_level_select()
+
+func handle_tap(pos: Vector2):
+	if showing_level_select or level_completed:
+		return
+	
+	# 检查是否点击了塔按钮区域（左侧）
+	if pos.x < 220:
+		return  # UI区域，不处理
+	
+	# 检查是否点击了升级按钮
+	if pos.y > 400 and pos.y < 450 and selected_tower_type == "":
+		attempt_upgrade_tower(pos)
+		return
+	
+	# 放置或升级塔
+	if selected_tower_type != "":
+		attempt_place_tower(pos)
+	else:
+		attempt_upgrade_tower(pos)
+
+func _process(_delta: float):
 	if game_over or showing_level_select:
 		return
 	
@@ -205,16 +246,14 @@ func _process(_delta: float) -> void:
 	if wave_in_progress and enemies.is_empty() and not game_over:
 		_on_wave_complete()
 
-func _on_wave_complete() -> void:
+func _on_wave_complete():
 	var level_data = LVL(selected_level)
 	
 	if wave >= level_data["w"]:
-		# 关卡完成
 		level_completed = true
 		show_message("🎉 第%d关通关！奖励 %d 金币！" % [selected_level, level_data["r"]])
 		gold += level_data["r"]
 		
-		# 解锁下一关
 		if selected_level < 5:
 			var next_level = selected_level + 1
 			if not next_level in level_progress:
@@ -222,33 +261,15 @@ func _on_wave_complete() -> void:
 				save_level_progress()
 				show_message("🎊 解锁第%d关：%s！" % [next_level, LVL(next_level)["n"]])
 		else:
-			show_message("🏆 恭喜通关所有关卡！你是大师！")
+			show_message("🏆 恭喜通关所有关卡！")
 		
 		wave_in_progress = false
-		level_completed = true
 	else:
 		wave_in_progress = false
 		gold += 50
 		show_message("波次 %d 完成！+50 金币" % wave)
 	
 	_update_ui()
-
-func _input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel"):
-		if not showing_level_select and not game_over:
-			show_level_select()
-			return
-	
-	if game_over or showing_level_select:
-		return
-	
-	if event.is_action_pressed("place_tower") and selected_tower_type != "":
-		var mouse_pos = get_global_mouse_position()
-		attempt_place_tower(mouse_pos)
-	
-	if event.is_action_pressed("delete_tower"):
-		var mouse_pos = get_global_mouse_position()
-		attempt_remove_tower(mouse_pos)
 
 func attempt_place_tower(pos: Vector2) -> bool:
 	if selected_tower_type == "":
@@ -276,7 +297,7 @@ func attempt_place_tower(pos: Vector2) -> bool:
 	var tower = _create_tower(selected_tower_type, pos)
 	towers.append(tower)
 	_update_ui()
-	show_message("%s 已放置！" % tower_data["n"])
+	show_message("%s 已放置！" % tower_data.name)
 	return true
 
 func _is_valid_position(pos: Vector2) -> bool:
@@ -299,7 +320,7 @@ func _distance_to_segment(p: Vector2, a: Vector2, b: Vector2) -> float:
 	var closest = a + ab * t
 	return p.distance_to(closest)
 
-func attempt_remove_tower(pos: Vector2) -> void:
+func attempt_remove_tower(pos: Vector2):
 	for tower in towers:
 		if tower and is_instance_valid(tower):
 			if tower.global_position.distance_to(pos) < 25:
@@ -313,7 +334,7 @@ func attempt_remove_tower(pos: Vector2) -> void:
 				_update_ui()
 				return
 
-func attempt_upgrade_tower(pos: Vector2) -> void:
+func attempt_upgrade_tower(pos: Vector2):
 	for tower in towers:
 		if tower and is_instance_valid(tower):
 			if tower.global_position.distance_to(pos) < 25:
@@ -322,7 +343,7 @@ func attempt_upgrade_tower(pos: Vector2) -> void:
 					return
 				
 				var base_cost = TOWER_TYPES[tower.tower_type].cost
-				var upgrade_cost = int(base_cost * UPGRADE_COST_MULTIPLIER * tower.level)
+				var upgrade_cost = int(base_cost * 0.5 * tower.level)
 				
 				if gold < upgrade_cost:
 					show_message("金币不足！需要 %d" % upgrade_cost)
@@ -344,7 +365,7 @@ func _create_tower(type: String, pos: Vector2) -> Node2D:
 	add_child(tower)
 	return tower
 
-func start_wave() -> void:
+func start_wave():
 	if showing_level_select or level_completed:
 		show_level_select()
 		return
@@ -361,7 +382,6 @@ func start_wave() -> void:
 	show_message("第 %d 波来袭！" % wave)
 	_update_ui()
 	
-	# 检查是否BOSS波
 	if wave == level_data["bw"]:
 		spawn_boss(level_data["bt"])
 	else:
@@ -371,7 +391,7 @@ func start_wave() -> void:
 			await get_tree().create_timer(spawn_delay).timeout
 			spawn_enemy(wave, level_data)
 
-func spawn_enemy(wave_num: int, level_data: Dictionary) -> void:
+func spawn_enemy(wave_num: int, level_data: Dictionary):
 	var enemy_scene = load("res://scenes/enemy.tscn")
 	var enemy = enemy_scene.instantiate()
 	
@@ -385,7 +405,7 @@ func spawn_enemy(wave_num: int, level_data: Dictionary) -> void:
 	enemy.reward = type_data.reward + wave_num * 2
 	enemy.armor = type_data.armor
 	enemy.magic_resist = type_data.magic_resist
-	enemy.enemy_name = type_data["n"]
+	enemy.enemy_name = type_data.name
 	enemy.enemy_icon = type_data.icon
 	enemy.path_index = 0
 	enemy.path_progress = 0.0
@@ -395,7 +415,7 @@ func spawn_enemy(wave_num: int, level_data: Dictionary) -> void:
 	add_child(enemy)
 	enemies.append(enemy)
 
-func spawn_boss(boss_type: String) -> void:
+func spawn_boss(boss_type: String):
 	var boss_data = BOS(boss_type)
 	
 	var enemy_scene = load("res://scenes/enemy.tscn")
@@ -420,7 +440,6 @@ func spawn_boss(boss_type: String) -> void:
 	
 	add_child(boss_enemy)
 	enemies.append(boss_enemy)
-	boss = boss_enemy
 	boss_spawned = true
 	
 	show_message("⚠️ BOSS来袭：%s ！" % boss_data["n"])
@@ -437,23 +456,17 @@ func _choose_enemy_type(wave_num: int, allowed_types: Array) -> String:
 	
 	return "normal"
 
-func trigger_game_over() -> void:
+func trigger_game_over():
 	game_over = true
 	show_message("游戏结束！第 %d 波失败" % wave)
 	$UI/GameOverPanel.visible = true
 
-func restart_level() -> void:
-	select_level(selected_level)
+func _update_ui():
+	gold_label.text = "💰 %d" % gold
+	lives_label.text = "❤️ %d" % lives
+	wave_label.text = "🌊 %d/%d" % [wave, LVL(selected_level)["w"]]
 
-func return_to_menu() -> void:
-	show_level_select()
-
-func _update_ui() -> void:
-	gold_label.text = "💰 金币: %d" % gold
-	lives_label.text = "❤️ 生命: %d" % lives
-	wave_label.text = "🌊 波次: %d/%d" % [wave, LVL(selected_level)["w"]]
-
-func show_message(msg: String) -> void:
+func show_message(msg: String):
 	message_label.text = msg
 	message_label.visible = true
 	await get_tree().create_timer(3.0).timeout
