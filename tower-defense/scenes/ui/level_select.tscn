@@ -1,0 +1,108 @@
+[gd_scene load_steps=2 format=3 uid="uid://levelselect"]
+
+[ext_resource type="Script" path="res://scripts/ui/level_select.gd" id="1"]
+
+[node name="LevelSelect" type="CanvasLayer"]
+script = ExtResource("1")
+
+[node name="BG" type="ColorRect" parent="."]
+anchors_horizontal_center = 0.5
+anchors_vertical_center = 0.5
+offset_left = -540.0
+offset_top = -360.0
+offset_right = 540.0
+offset_bottom = 360.0
+color = Color(0.05, 0.08, 0.15, 1)
+
+[node name="Title" type="Label" parent="."]
+anchors_horizontal_center = 0.5
+offset_top = 30.0
+offset_right = 1080.0
+offset_bottom = 100.0
+theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
+theme_override_font_sizes/font_size = 48
+horizontal_alignment = 1
+text = "🎮 选择关卡"
+
+[node name="Grid" type="GridContainer" parent="."]
+anchors_horizontal_center = 0.5
+anchors_vertical_center = 0.5
+offset_left = -400.0
+offset_top = -150.0
+offset_right = 400.0
+offset_bottom = 150.0
+columns = 5
+
+[node name="Level1" type="Button" parent="Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.1, 0.1, 0.1, 1)
+theme_override_font_sizes/font_size = 24
+text = "第1关
+新手村"
+
+[node name="Level2" type="Button" parent="Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.1, 0.1, 0.1, 1)
+theme_override_font_sizes/font_size = 24
+text = "第2关
+森林要塞"
+
+[node name="Level3" type="Button" parent="Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.1, 0.1, 0.1, 1)
+theme_override_font_sizes/font_size = 24
+text = "第3关
+魔法山谷"
+
+[node name="Level4" type="Button" parent="Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.1, 0.1, 0.1, 1)
+theme_override_font_sizes/font_size = 24
+text = "第4关
+钢铁前线"
+
+[node name="Level5" type="Button" parent="Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.1, 0.1, 0.1, 1)
+theme_override_font_sizes/font_size = 24
+text = "第5关
+最终决战"
+
+[node name="DailyChallenge" type="Button" parent="."]
+anchors_horizontal_center = 0.5
+offset_top = 200.0
+offset_right = 300.0
+offset_bottom = 260.0
+theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
+theme_override_font_sizes/font_size = 24
+text = "📅 每日挑战"
+
+[node name="BackButton" type="Button" parent="."]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 140.0
+offset_bottom = 70.0
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 20
+text = "← 返回"
+
+[node name="InfoLabel" type="Label" parent="."]
+anchors_horizontal_center = 0.5
+anchors_vertical_center = 1.0
+offset_top = -80.0
+offset_right = 1080.0
+offset_bottom = -40.0
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+text = "完成关卡解锁下一关 ⭐⭐⭐评价需剩余生命≥15且金币≥200"
