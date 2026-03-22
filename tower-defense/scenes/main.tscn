@@ -368,6 +368,36 @@ theme_override_font_sizes/font_size = 18
 text = "💚治疗
 30秒"
 
+[node name="ObstacleRock" type="Button" parent="UI"]
+offset_left = 10.0
+offset_top = 200.0
+offset_right = 120.0
+offset_bottom = 250.0
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+theme_override_font_sizes/font_size = 16
+text = "🪨石头
+30g"
+
+[node name="ObstacleSpike" type="Button" parent="UI"]
+offset_left = 130.0
+offset_top = 200.0
+offset_right = 240.0
+offset_bottom = 250.0
+theme_override_colors/font_color = Color(0.7, 0.3, 0.3, 1)
+theme_override_font_sizes/font_size = 16
+text = "🔺地刺
+50g"
+
+[node name="ObstacleWall" type="Button" parent="UI"]
+offset_left = 250.0
+offset_top = 200.0
+offset_right = 360.0
+offset_bottom = 250.0
+theme_override_colors/font_color = Color(0.6, 0.4, 0.2, 1)
+theme_override_font_sizes/font_size = 16
+text = "🧱围墙
+40g"
+
 [node name="StartWaveButton" type="Button" parent="UI"]
 offset_left = 10.0
 offset_top = 620.0

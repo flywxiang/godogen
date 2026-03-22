@@ -35,6 +35,16 @@ var kill_streak: int = 0
 var kill_streak_timer: float = 0.0
 var combo_count: int = 0
 
+# 障碍物系统
+var obstacles: Array = []
+var selected_obstacle: String = ""
+
+const OBSTACLE_TYPES = {
+	"rock": {"cost": 30, "name": "石头", "desc": "减速敌人50%", "color": Color(0.5, 0.5, 0.5)},
+	"spike": {"cost": 50, "name": "地刺", "desc": "持续伤害", "color": Color(0.7, 0.3, 0.3)},
+	"wall": {"cost": 40, "name": "围墙", "desc": "阻挡敌人", "color": Color(0.6, 0.4, 0.2)}
+}
+
 # Save data
 var save_data: Dictionary = {
 	"high_scores": {},
@@ -125,6 +135,9 @@ func _setup_buttons():
 	$UI/SkillLightning.pressed.connect(_on_skill_lightning.bind())
 	$UI/SkillFreeze.pressed.connect(_on_skill_freeze.bind())
 	$UI/SkillHeal.pressed.connect(_on_skill_heal.bind())
+	$UI/ObstacleRock.pressed.connect(_on_obstacle_rock.bind())
+	$UI/ObstacleSpike.pressed.connect(_on_obstacle_spike.bind())
+	$UI/ObstacleWall.pressed.connect(_on_obstacle_wall.bind())
 	
 	for i in range(1, 6):
 		var btn = $UI.get_node_or_null("LevelPanel/VBox/Grid/Level%d" % i)
@@ -423,7 +436,9 @@ func _handle_tap(pos: Vector2):
 	if pos.x < 150 and pos.y > 350:
 		return
 	
-	if selected_tower_type != "":
+	if selected_obstacle != "":
+		_attempt_place_obstacle(pos)
+	elif selected_tower_type != "":
 		_attempt_place(pos)
 	else:
 		_attempt_upgrade(pos)
@@ -463,6 +478,75 @@ func _attempt_upgrade(pos: Vector2):
 			_update_ui()
 			return
 
+func _attempt_place_obstacle(pos: Vector2) -> bool:
+	var obs_data = OBSTACLE_TYPES.get(selected_obstacle)
+	if not obs_data or gold < obs_data.cost:
+		show_msg("金币不足！")
+		return false
+	if not _valid_pos(pos):
+		show_msg("位置无效！")
+		return false
+	for o in obstacles:
+		if o and is_instance_valid(o) and o.global_position.distance_to(pos) < 40:
+			show_msg("太近了！")
+			return false
+	gold -= obs_data.cost
+	var obs = _create_obstacle(selected_obstacle, pos)
+	obstacles.append(obs)
+	selected_obstacle = ""
+	_update_obstacle_buttons()
+	_update_ui()
+	return true
+
+func _create_obstacle(type: String, pos: Vector2) -> Node2D:
+	var obs = Node2D.new()
+	obs.global_position = pos
+	obs.set("obstacle_type", type)
+	obs.set("obstacle_data", OBSTACLE_TYPES[type])
+	add_child(obs)
+	
+	# 创建视觉
+	var rect = ColorRect.new()
+	rect.size = Vector2(30, 30)
+	var colors = {
+		"rock": Color(0.5, 0.5, 0.5),
+		"spike": Color(0.7, 0.3, 0.3),
+		"wall": Color(0.6, 0.4, 0.2)
+	}
+	rect.color = colors.get(type, Color(0.5, 0.5, 0.5))
+	obs.add_child(rect)
+	
+	# 障碍物效果
+	if type == "spike":
+		obs.set("damage_timer", 1.0)
+		obs.set("damage_cooldown", 1.0)
+	
+	return obs
+
+func _process_obstacles(delta: float):
+	for o in obstacles:
+		if not is_instance_valid(o):
+			continue
+		var type = o.get("obstacle_type")
+		var pos = o.global_position
+		
+		# 地刺持续伤害
+		if type == "spike":
+			var dt = o.get("damage_timer", 1.0)
+			dt -= delta
+			o.set("damage_timer", dt)
+			if dt <= 0:
+				for e in enemies:
+					if e and is_instance_valid(e) and e.global_position.distance_to(pos) < 25:
+						e.take_damage(5.0, "magic")
+				o.set("damage_timer", 1.0)
+		
+		# 石头减速
+		if type == "rock":
+			for e in enemies:
+				if e and is_instance_valid(e) and e.global_position.distance_to(pos) < 25:
+					e.apply_slow(0.5, 0.5)
+
 func _valid_pos(pos: Vector2) -> bool:
 	if pos.y < 80 or pos.y > 340 or pos.x < 50 or pos.x > 1150:
 		return false
@@ -497,6 +581,8 @@ func _process(_d: float):
 	
 	if game_over or showing_level_select or showing_shop or game_paused:
 		return
+	
+	_process_obstacles(_d)
 	
 	kill_streak_timer -= _d
 	if kill_streak_timer <= 0:
@@ -667,6 +753,36 @@ func _on_skill_heal():
 	show_msg("💚治疗！生命+30")
 	_update_ui()
 	_update_skill_buttons()
+
+func _on_obstacle_rock():
+	selected_obstacle = "rock" if selected_obstacle != "rock" else ""
+	_update_obstacle_buttons()
+
+func _on_obstacle_spike():
+	selected_obstacle = "spike" if selected_obstacle != "spike" else ""
+	_update_obstacle_buttons()
+
+func _on_obstacle_wall():
+	selected_obstacle = "wall" if selected_obstacle != "wall" else ""
+	_update_obstacle_buttons()
+
+func _update_obstacle_buttons():
+	var obs_types = ["rock", "spike", "wall"]
+	var btns = {
+		"rock": $UI/ObstacleRock, 
+		"spike": $UI/ObstacleSpike, 
+		"wall": $UI/ObstacleWall
+	}
+	var colors = {
+		"rock": Color(0.5, 0.5, 0.5),
+		"spike": Color(0.7, 0.3, 0.3),
+		"wall": Color(0.6, 0.4, 0.2)
+	}
+	for t in obs_types:
+		if selected_obstacle == t:
+			btns[t].modulate = colors[t]
+		else:
+			btns[t].modulate = Color(1, 1, 1)
 
 func _update_skill_buttons():
 	var lightning_cd = skill_cooldowns["lightning"]
