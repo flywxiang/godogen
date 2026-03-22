@@ -61,7 +61,10 @@ const ENEMY_TYPES = {
 	"normal": {"health": 100, "speed": 100, "reward": 10, "armor": 0, "magic_resist": 0, "name": "普通", "icon": "👹"},
 	"armor": {"health": 200, "speed": 60, "reward": 25, "armor": 0.5, "magic_resist": 0, "name": "装甲", "icon": "🛡️"},
 	"magic_resist": {"health": 120, "speed": 90, "reward": 20, "armor": 0, "magic_resist": 0.5, "name": "魔抗", "icon": "🔮"},
-	"fast": {"health": 60, "speed": 160, "reward": 15, "armor": 0, "magic_resist": 0, "name": "快速", "icon": "⚡"}
+	"fast": {"health": 60, "speed": 160, "reward": 15, "armor": 0, "magic_resist": 0, "name": "快速", "icon": "⚡"},
+	"shadow": {"health": 80, "speed": 120, "reward": 30, "armor": 0.1, "magic_resist": 0.1, "name": "暗影", "icon": "👻"},
+	"healer": {"health": 150, "speed": 70, "reward": 35, "armor": 0, "magic_resist": 0, "name": "治疗", "icon": "💚"},
+	"elite": {"health": 250, "speed": 80, "reward": 50, "armor": 0.3, "magic_resist": 0.3, "name": "精英", "icon": "⭐"}
 }
 
 const SHOP_ITEMS = {
@@ -215,6 +218,7 @@ func _spawn_enemy(wave_num: int, ld):
 	e.path_index = 0
 	e.path_progress = 0
 	e.reached_end = false
+	e.enemy_path = path_points.duplicate()
 	e.add_to_group("enemies")
 	add_child(e)
 	enemies.append(e)
