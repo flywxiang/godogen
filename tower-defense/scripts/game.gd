@@ -28,6 +28,21 @@ var enemies: Array = []
 var projectiles: Array = []
 var level_progress: Array = [1]
 var showing_level_select: bool = false
+var showing_shop: bool = false
+var showing_pause: bool = false
+var game_paused: bool = false
+var kill_streak: int = 0
+var kill_streak_timer: float = 0.0
+var combo_count: int = 0
+
+# Save data
+var save_data: Dictionary = {
+	"high_scores": {},
+	"achievements": [],
+	"total_gold": 0,
+	"total_kills": 0,
+	"daily_challenge": null
+}
 
 var path_points: Array = [
 	Vector2(-50, 360), Vector2(200, 360), Vector2(200, 550),
@@ -37,9 +52,9 @@ var path_points: Array = [
 ]
 
 const TOWER_TYPES = {
-	"arrow": {"cost": 50, "damage": 10, "range": 150, "fire_rate": 1.2, "color": Color(0.2, 0.6, 0.2), "name": "箭塔"},
-	"cannon": {"cost": 100, "damage": 30, "range": 120, "fire_rate": 0.5, "color": Color(0.8, 0.4, 0.1), "name": "炮塔"},
-	"magic": {"cost": 80, "damage": 15, "range": 180, "fire_rate": 0.8, "color": Color(0.4, 0.2, 0.8), "name": "魔塔"}
+	"arrow": {"cost": 50, "damage": 10, "range": 150, "fire_rate": 1.2, "color": Color(0.2, 0.6, 0.2), "name": "箭塔", "skill_name": "连射", "skill_desc": "攻速+50%"},
+	"cannon": {"cost": 100, "damage": 30, "range": 120, "fire_rate": 0.5, "color": Color(0.8, 0.4, 0.1), "name": "炮塔", "skill_name": "爆炸", "skill_desc": "范围伤害"},
+	"magic": {"cost": 80, "damage": 15, "range": 180, "fire_rate": 0.8, "color": Color(0.4, 0.2, 0.8), "name": "魔塔", "skill_name": "冰冻", "skill_desc": "减速+80%"}
 }
 
 const ENEMY_TYPES = {
@@ -49,27 +64,69 @@ const ENEMY_TYPES = {
 	"fast": {"health": 60, "speed": 160, "reward": 15, "armor": 0, "magic_resist": 0, "name": "快速", "icon": "⚡"}
 }
 
+const SHOP_ITEMS = {
+	"heal": {"name": "生命药水", "cost": 50, "desc": "恢复20生命"},
+	"shield": {"name": "护盾", "cost": 100, "desc": "免疫3波伤害"},
+	"speed_up": {"name": "攻速光环", "cost": 80, "desc": "所有塔攻速+30%"},
+	"damage_up": {"name": "力量光环", "cost": 120, "desc": "所有塔伤害+30%"}
+}
+
+const ACHIEVEMENTS = {
+	"first_blood": {"name": "初战告捷", "desc": "击杀第一个敌人", "reward": 20},
+	"kill_10": {"name": "杀手", "desc": "击杀10个敌人", "reward": 50},
+	"kill_100": {"name": "屠夫", "desc": "击杀100个敌人", "reward": 200},
+	"wave_5": {"name": "小试牛刀", "desc": "完成第5波", "reward": 30},
+	"wave_10": {"name": "波涛汹涌", "desc": "完成第10波", "reward": 100},
+	"combo_5": {"name": "连杀达人", "desc": "5连杀", "reward": 50},
+	"rich": {"name": "财大气粗", "desc": "拥有500金币", "reward": 30},
+	"all_towers": {"name": "塔防大师", "desc": "同时拥有3种塔", "reward": 100}
+}
+
 const MAX_LEVEL = 3
 
 func _ready():
 	randomize()
+	_load_save()
 	_setup_buttons()
 	_start_level(1)
 
 func _setup_buttons():
-	# 塔按钮
 	$UI/TowerArrow.pressed.connect(_on_arrow.bind())
 	$UI/TowerCannon.pressed.connect(_on_cannon.bind())
 	$UI/TowerMagic.pressed.connect(_on_magic.bind())
 	$UI/StartWaveButton.pressed.connect(_on_start_wave.bind())
 	$UI/LevelButton.pressed.connect(_on_show_levels.bind())
+	$UI/ShopButton.pressed.connect(_on_show_shop.bind())
+	$UI/PauseButton.pressed.connect(_on_toggle_pause.bind())
 	
-	# 关卡按钮
 	for i in range(1, 6):
 		var btn = $UI.get_node_or_null("LevelPanel/VBox/Grid/Level%d" % i)
 		if btn:
 			var n = i
 			btn.pressed.connect(_on_select_level.bind(n))
+	
+	$UI/ShopPanel/VBox/HealButton.pressed.connect(_on_shop_heal.bind())
+	$UI/ShopPanel/VBox/ShieldButton.pressed.connect(_on_shop_shield.bind())
+	$UI/ShopPanel/VBox/SpeedButton.pressed.connect(_on_shop_speed.bind())
+	$UI/ShopPanel/VBox/DamageButton.pressed.connect(_on_shop_damage.bind())
+	$UI/ShopPanel/VBox/CloseButton.pressed.connect(_on_close_shop.bind())
+	$UI/PausePanel/VBox/ResumeButton.pressed.connect(_on_toggle_pause.bind())
+	$UI/PausePanel/VBox/RestartButton.pressed.connect(_on_restart.bind())
+	$UI/PausePanel/VBox/MenuButton.pressed.connect(_on_show_levels.bind())
+
+func _load_save():
+	var f = FileAccess.open("user://save.dat", FileAccess.READ)
+	if f:
+		var data = JSON.parse_string(f.get_as_text())
+		if data:
+			save_data = data
+		f.close()
+
+func _save_game():
+	var f = FileAccess.open("user://save.dat", FileAccess.WRITE)
+	if f:
+		f.store_string(JSON.stringify(save_data))
+		f.close()
 
 func _start_level(level_num: int):
 	selected_level = level_num
@@ -83,12 +140,25 @@ func _start_level(level_num: int):
 	towers = []
 	enemies = []
 	projectiles = []
+	game_paused = false
+	showing_pause = false
+	showing_shop = false
+	showing_level_select = false
+	kill_streak = 0
+	combo_count = 0
 	
 	for t in get_tree().get_nodes_in_group("towers"): t.queue_free()
 	for e in get_tree().get_nodes_in_group("enemies"): e.queue_free()
 	for p in get_tree().get_nodes_in_group("projectiles"): p.queue_free()
 	
 	_update_ui()
+	_hide_all_panels()
+
+func _hide_all_panels():
+	$UI/LevelSelectBG.visible = false
+	$UI/LevelPanel.visible = false
+	$UI/ShopPanel.visible = false
+	$UI/PausePanel.visible = false
 
 func _on_arrow(): _select_tower("arrow")
 func _on_cannon(): _select_tower("cannon")
@@ -108,7 +178,9 @@ func _update_tower_buttons():
 		btns[t].modulate = colors[t] if selected_tower_type == t else Color(1, 1, 1)
 
 func _on_start_wave():
-	if game_over or showing_level_select:
+	if showing_level_select or showing_shop or showing_pause or game_over:
+		return
+	if game_paused:
 		return
 	if wave_in_progress:
 		return
@@ -123,7 +195,8 @@ func _on_start_wave():
 	var count = 5 + wave * 2
 	for i in range(count):
 		await get_tree().create_timer(ld["si"]).timeout
-		_spawn_enemy(wave, ld)
+		if not game_paused:
+			_spawn_enemy(wave, ld)
 
 func _spawn_enemy(wave_num: int, ld):
 	var etype = ld["e"][randi() % ld["e"].size()]
@@ -142,22 +215,34 @@ func _spawn_enemy(wave_num: int, ld):
 	e.path_index = 0
 	e.path_progress = 0
 	e.reached_end = false
-	e.setup(path_points, edata.speed)
+	e.add_to_group("enemies")
 	add_child(e)
 	enemies.append(e)
 
 func _on_show_levels():
-	showing_level_select = true
-	$UI/LevelSelectBG.visible = true
-	$UI/LevelPanel.visible = true
-	_update_level_buttons()
+	_show_panel("level")
 
 func _on_select_level(n):
-	showing_level_select = false
-	$UI/LevelSelectBG.visible = false
-	$UI/LevelPanel.visible = false
 	_start_level(n)
 	show_msg("第%d关：%s" % [n, LVL(n)["n"]])
+
+func _on_show_shop():
+	_show_panel("shop")
+
+func _show_panel(name: String):
+	_hide_all_panels()
+	if name == "level":
+		showing_level_select = true
+		$UI/LevelSelectBG.visible = true
+		$UI/LevelPanel.visible = true
+		_update_level_buttons()
+	elif name == "shop":
+		showing_shop = true
+		$UI/ShopPanel.visible = true
+		_update_shop()
+	elif name == "pause":
+		showing_pause = true
+		$UI/PausePanel.visible = true
 
 func _update_level_buttons():
 	for i in range(1, 6):
@@ -172,46 +257,109 @@ func _update_level_buttons():
 				btn.modulate = Color(0.4, 0.4, 0.4)
 				btn.disabled = true
 
+func _update_shop():
+	$UI/ShopPanel/VBox/GoldLabel.text = "💰 %d" % gold
+	_update_shop_button($UI/ShopPanel/VBox/HealButton, SHOP_ITEMS["heal"])
+	_update_shop_button($UI/ShopPanel/VBox/ShieldButton, SHOP_ITEMS["shield"])
+	_update_shop_button($UI/ShopPanel/VBox/SpeedButton, SHOP_ITEMS["speed_up"])
+	_update_shop_button($UI/ShopPanel/VBox/DamageButton, SHOP_ITEMS["damage_up"])
+
+func _update_shop_button(btn: Button, item: Dictionary):
+	btn.text = "%s\n%d金币\n%s" % [item.name, item.cost, item.desc]
+	btn.disabled = gold < item.cost
+
+func _on_shop_heal():
+	if gold >= SHOP_ITEMS["heal"]["cost"] and lives < 100:
+		gold -= SHOP_ITEMS["heal"]["cost"]
+		lives = min(100, lives + 20)
+		show_msg("生命+20！")
+		_update_ui()
+	_update_shop()
+
+func _on_shop_shield():
+	if gold >= SHOP_ITEMS["shield"]["cost"]:
+		gold -= SHOP_ITEMS["shield"]["cost"]
+		lives += 50
+		show_msg("护盾+50！")
+		_update_ui()
+	_update_shop()
+
+func _on_shop_speed():
+	if gold >= SHOP_ITEMS["speed_up"]["cost"]:
+		gold -= SHOP_ITEMS["speed_up"]["cost"]
+		for t in towers:
+			if t: t.fire_rate_mult *= 1.3
+		show_msg("攻速+30%%！")
+		_update_ui()
+	_update_shop()
+
+func _on_shop_damage():
+	if gold >= SHOP_ITEMS["damage_up"]["cost"]:
+		gold -= SHOP_ITEMS["damage_up"]["cost"]
+		for t in towers:
+			if t: t.damage_mult *= 1.3
+		show_msg("伤害+30%%！")
+		_update_ui()
+	_update_shop()
+
+func _on_close_shop():
+	_show_panel("")
+
+func _on_toggle_pause():
+	if showing_level_select or showing_shop:
+		return
+	if game_over:
+		return
+	game_paused = !game_paused
+	if game_paused:
+		_show_panel("pause")
+	else:
+		_hide_all_panels()
+		_update_ui()
+
+func _on_restart():
+	_start_level(selected_level)
+	show_msg("重新开始！")
+
 func _input(event: InputEvent):
-	if event is InputEventScreenTouch:
-		if event.pressed:
-			var pos = event.position
-			_handle_tap(pos)
+	if event is InputEventScreenTouch and event.pressed:
+		var pos = event.position
+		_handle_tap(pos)
 
 func _handle_tap(pos: Vector2):
-	if showing_level_select:
+	if showing_level_select or showing_shop or game_over:
+		return
+	if game_paused and not $UI/PausePanel.get_global_rect().has_point(pos):
 		return
 	
-	# 底部UI区域不响应
 	if pos.y > 620:
 		return
-	
-	# 左下角塔按钮
-	if pos.x < 430 and pos.y > 340:
+	if pos.x < 150 and pos.y > 350:
 		return
 	
-	# 放置或升级
 	if selected_tower_type != "":
 		_attempt_place(pos)
 	else:
 		_attempt_upgrade(pos)
 
-func _attempt_place(pos: Vector2):
+func _attempt_place(pos: Vector2) -> bool:
 	var td = TOWER_TYPES.get(selected_tower_type)
 	if not td or gold < td.cost:
 		show_msg("金币不足！")
-		return
+		return false
 	if not _valid_pos(pos):
 		show_msg("位置无效！")
-		return
+		return false
 	for t in towers:
 		if t and is_instance_valid(t) and t.global_position.distance_to(pos) < 50:
 			show_msg("太近了！")
-			return
+			return false
 	gold -= td.cost
 	var tower = _create_tower(selected_tower_type, pos)
 	towers.append(tower)
 	_update_ui()
+	_check_achievement("all_towers")
+	return true
 
 func _attempt_upgrade(pos: Vector2):
 	for t in towers:
@@ -255,8 +403,12 @@ func _create_tower(type: String, pos: Vector2) -> Node2D:
 	return t
 
 func _process(_d: float):
-	if game_over or showing_level_select:
+	if game_over or showing_level_select or showing_shop or game_paused:
 		return
+	
+	kill_streak_timer -= _d
+	if kill_streak_timer <= 0:
+		kill_streak = 0
 	
 	var to_rm = []
 	for e in enemies:
@@ -298,6 +450,8 @@ func _on_wave_done():
 		gold += ld["r"]
 		if selected_level < 5 and not (selected_level + 1 in level_progress):
 			level_progress.append(selected_level + 1)
+		_save_game()
+		_check_achievement("wave_5" if wave >= 5 else "wave_10")
 		show_msg("🎉 通关！+%d金币" % ld["r"])
 		wave_in_progress = false
 	else:
@@ -308,20 +462,53 @@ func _on_wave_done():
 
 func _trigger_game_over():
 	game_over = true
+	_save_game()
 	show_msg("游戏结束！")
-	$UI/GameOverPanel.visible = true
+	$UI/PausePanel.visible = true
 
 func _update_ui():
 	$UI/TopBar/HBox/GoldLabel.text = "💰 %d" % gold
 	$UI/TopBar/HBox/LivesLabel.text = "❤️ %d" % lives
 	$UI/TopBar/HBox/WaveLabel.text = "🌊 %d/%d" % [wave, LVL(selected_level)["w"]]
 	$UI/TopBar/HBox/LevelName.text = LVL(selected_level)["n"]
-
-func add_gold(amount: int):
-	gold += amount
-	_update_ui()
+	$UI/ComboLabel.visible = kill_streak >= 3
+	if kill_streak >= 3:
+		$UI/ComboLabel.text = "🔥 %d连杀！+%d" % [kill_streak, kill_streak * 5]
 
 func show_msg(msg: String):
 	$UI/MessageLabel.text = msg
 	$UI/MessageLabel.visible = true
 	$UI/MessageLabel/Timer.start(3.0)
+
+func add_gold(amount: int):
+	gold += amount
+	_update_ui()
+	_check_achievement("rich")
+
+func add_kill():
+	kill_streak += 1
+	kill_streak_timer = 3.0
+	combo_count += 1
+	save_data["total_kills"] += 1
+	
+	if kill_streak >= 5:
+		_check_achievement("combo_5")
+		gold += kill_streak * 5
+		show_msg("🔥 %d连杀！+%d金币" % [kill_streak, kill_streak * 5])
+	
+	if combo_count >= 10:
+		_check_achievement("kill_10")
+	if combo_count >= 100:
+		_check_achievement("kill_100")
+	
+	_update_ui()
+
+func _check_achievement(key: String):
+	if key in save_data["achievements"]:
+		return
+	save_data["achievements"].append(key)
+	var ach = ACHIEVEMENTS[key]
+	gold += ach["reward"]
+	show_msg("🏆 成就解锁：%s！+%d金币" % [ach["name"], ach["reward"]])
+	_update_ui()
+	_save_game()

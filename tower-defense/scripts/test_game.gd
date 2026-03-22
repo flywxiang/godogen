@@ -48,13 +48,13 @@ func test_game_initialization():
 func test_gold_system():
 	print("\n📋 测试2: 金币系统")
 	if game and game.has_method("add_gold"):
-		var g = game.get("gold")
+		var g = game.gold
 		game.add_gold(100)
-		var g2 = game.get("gold")
+		var g2 = game.gold
 		if g2 == g + 100:
 			pass_test("add_gold正常: %d + 100 = %d" % [g, g2])
 		else:
-			fail_test("金币计算错误")
+			fail_test("金币计算错误: %d + 100 = %d (got %d)" % [g, g + 100, g2])
 	else:
 		fail_test("找不到add_gold方法")
 

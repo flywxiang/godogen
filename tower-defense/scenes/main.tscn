@@ -60,17 +60,43 @@ horizontal_alignment = 1
 vertical_alignment = 1
 text = "🌊 0/10"
 
+[node name="ComboLabel" type="Label" parent="UI"]
+visible = false
+anchors_horizontal_center = 0.5
+offset_top = 80.0
+offset_right = 300.0
+offset_bottom = 110.0
+theme_override_colors/font_color = Color(1, 0.5, 0.1, 1)
+theme_override_font_sizes/font_size = 24
+horizontal_alignment = 1
+text = "🔥 5连杀！+25"
+
 [node name="LevelButton" type="Button" parent="UI"]
 offset_left = 10.0
 offset_top = 80.0
 offset_right = 120.0
 offset_bottom = 120.0
-size_flags_horizontal = 0
-size_flags_vertical = 0
 theme_override_colors/font_color = Color(0.1, 0.1, 0.1, 1)
-theme_override_colors/font_hover_color = Color(0.2, 0.2, 0.2, 1)
 theme_override_font_sizes/font_size = 20
 text = "📋 关卡"
+
+[node name="ShopButton" type="Button" parent="UI"]
+offset_left = 130.0
+offset_top = 80.0
+offset_right = 240.0
+offset_bottom = 120.0
+theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
+theme_override_font_sizes/font_size = 20
+text = "🏪 商店"
+
+[node name="PauseButton" type="Button" parent="UI"]
+offset_left = 250.0
+offset_top = 80.0
+offset_right = 340.0
+offset_bottom = 120.0
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+theme_override_font_sizes/font_size = 20
+text = "⏸️"
 
 [node name="MessageLabel" type="Label" parent="UI"]
 anchors_horizontal_center = 0.5
@@ -173,17 +199,106 @@ theme_override_font_sizes/font_size = 18
 horizontal_alignment = 1
 text = "点击选择关卡"
 
-[node name="BottomPanel" type="PanelContainer" parent="UI"]
-offset_left = 0.0
-offset_top = 620.0
-offset_right = 1080.0
-offset_bottom = 720.0
-size_flags_horizontal = 3
-size_flags_vertical = 4
+[node name="ShopPanel" type="PanelContainer" parent="UI"]
+visible = false
+anchors_horizontal_center = 0.5
+anchors_vertical_center = 0.5
+offset_left = -350.0
+offset_top = -300.0
+offset_right = 350.0
+offset_bottom = 300.0
 
-[node name="HBox" type="HBoxContainer" parent="UI/BottomPanel"]
+[node name="VBox" type="VBoxContainer" parent="UI/ShopPanel"]
 layout_mode = 2
-theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="UI/ShopPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
+theme_override_font_sizes/font_size = 36
+horizontal_alignment = 1
+text = "🏪 商店"
+
+[node name="GoldLabel" type="Label" parent="UI/ShopPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+theme_override_font_sizes/font_size = 28
+horizontal_alignment = 1
+text = "💰 200"
+
+[node name="HealButton" type="Button" parent="UI/ShopPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.8, 0.2, 1)
+theme_override_font_sizes/font_size = 20
+text = "生命药水
+50金币
+恢复20生命"
+
+[node name="ShieldButton" type="Button" parent="UI/ShopPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.4, 0.9, 1)
+theme_override_font_sizes/font_size = 20
+text = "护盾
+100金币
+生命+50"
+
+[node name="SpeedButton" type="Button" parent="UI/ShopPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.6, 0.2, 1)
+theme_override_font_sizes/font_size = 20
+text = "攻速光环
+80金币
+所有塔攻速+30%"
+
+[node name="DamageButton" type="Button" parent="UI/ShopPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.2, 0.2, 1)
+theme_override_font_sizes/font_size = 20
+text = "力量光环
+120金币
+所有塔伤害+30%"
+
+[node name="CloseButton" type="Button" parent="UI/ShopPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 24
+text = "关闭"
+
+[node name="PausePanel" type="PanelContainer" parent="UI"]
+visible = false
+anchors_horizontal_center = 0.5
+anchors_vertical_center = 0.5
+offset_left = -200.0
+offset_top = -200.0
+offset_right = 200.0
+offset_bottom = 200.0
+
+[node name="VBox" type="VBoxContainer" parent="UI/PausePanel"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="UI/PausePanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
+theme_override_font_sizes/font_size = 48
+horizontal_alignment = 1
+text = "⏸️ 暂停"
+
+[node name="ResumeButton" type="Button" parent="UI/PausePanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.8, 0.2, 1)
+theme_override_font_sizes/font_size = 28
+text = "▶ 继续"
+
+[node name="RestartButton" type="Button" parent="UI/PausePanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.4, 0.2, 1)
+theme_override_font_sizes/font_size = 28
+text = "🔄 重新开始"
+
+[node name="MenuButton" type="Button" parent="UI/PausePanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+theme_override_font_sizes/font_size = 28
+text = "📋 关卡选择"
 
 [node name="TowerArrow" type="Button" parent="UI"]
 offset_left = 10.0
@@ -222,43 +337,10 @@ theme_override_font_sizes/font_size = 28
 text = "▶ 开始波次"
 
 [node name="InfoLabel" type="Label" parent="UI"]
-offset_left = 430.0
+offset_left = 510.0
 offset_top = 640.0
 offset_right = 1070.0
 offset_bottom = 700.0
 theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
-theme_override_font_sizes/font_size = 18
-text = "选塔→点地图放置
-点塔→升级/出售"
-
-[node name="LegendPanel" type="PanelContainer" parent="UI"]
-offset_left = 930.0
-offset_top = 80.0
-offset_right = 1070.0
-offset_bottom = 340.0
-
-[node name="Legend" type="Label" parent="UI/LegendPanel"]
-layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = "👹普通
-🛡️装甲
-🔮魔抗
-⚡快速
-👑BOSS"
-
-[node name="GameOverPanel" type="PanelContainer" parent="UI"]
-visible = false
-anchors_horizontal_center = 0.5
-anchors_vertical_center = 0.5
-offset_left = -200.0
-offset_top = -100.0
-offset_right = 200.0
-offset_bottom = 100.0
-
-[node name="Label" type="Label" parent="UI/GameOverPanel"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.2, 0.2, 1)
-theme_override_font_sizes/font_size = 48
-horizontal_alignment = 1
-vertical_alignment = 1
-text = "游戏结束"
+text = "选塔→点地图放置\n点塔→升级/出售\n⏸️暂停 🏪商店"
