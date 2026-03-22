@@ -38,6 +38,7 @@ var combo_count: int = 0
 # 障碍物系统
 var obstacles: Array = []
 var selected_obstacle: String = ""
+var obstacle_damage_timers: Dictionary = {}
 
 # 每日挑战
 var daily_challenge: Dictionary = {
@@ -45,6 +46,34 @@ var daily_challenge: Dictionary = {
 	"bonus_gold": 500,
 	"special_rule": "双倍伤害"
 }
+
+# 英雄系统
+var hero: Node2D = null
+var hero_unlocked: bool = false
+var hero_xp: int = 0
+var hero_level: int = 1
+var hero_skills_unlocked: Array = []
+var hero_damage: float = 20.0
+var hero_cooldown: float = 0.0
+var hero_range: float = 200.0
+var hero_level_mult: float = 1.0
+
+# 技能树
+const SKILL_TREE = {
+	"damage_1": {"name": "攻击强化I", "cost": 100, "desc": "所有塔伤害+10%", "unlocks": ["damage_2"]},
+	"damage_2": {"name": "攻击强化II", "cost": 200, "desc": "所有塔伤害+20%", "unlocks": ["damage_3"]},
+	"damage_3": {"name": "攻击强化III", "cost": 400, "desc": "所有塔伤害+40%", "unlocks": []},
+	"range_1": {"name": "射程强化I", "cost": 100, "desc": "所有塔射程+10%", "unlocks": ["range_2"]},
+	"range_2": {"name": "射程强化II", "cost": 200, "desc": "所有塔射程+20%", "unlocks": []},
+	"speed_1": {"name": "攻速强化I", "cost": 100, "desc": "所有塔攻速+10%", "unlocks": ["speed_2"]},
+	"speed_2": {"name": "攻速强化II", "cost": 200, "desc": "所有塔攻速+20%", "unlocks": []},
+	"gold_1": {"name": "金币强化I", "cost": 150, "desc": "击杀金币+10%", "unlocks": ["gold_2"]},
+	"gold_2": {"name": "金币强化II", "cost": 300, "desc": "击杀金币+25%", "unlocks": []},
+	"hero_1": {"name": "英雄解锁", "cost": 500, "desc": "解锁英雄角色", "unlocks": ["hero_2"]},
+	"hero_2": {"name": "英雄强化", "cost": 800, "desc": "英雄伤害+50%", "unlocks": []}
+}
+
+var skill_tree_unlocked: Array = []
 
 const OBSTACLE_TYPES = {
 	"rock": {"cost": 30, "name": "石头", "desc": "减速敌人50%", "color": Color(0.5, 0.5, 0.5)},
@@ -140,6 +169,8 @@ func _setup_buttons():
 	$UI/StartWaveButton.pressed.connect(_on_start_wave.bind())
 	$UI/StartEndlessButton.pressed.connect(_on_start_endless.bind())
 	$UI/DailyChallengeButton.pressed.connect(_on_daily_challenge.bind())
+	$UI/SkillTreeButton.pressed.connect(_on_show_skill_tree.bind())
+	$UI/HeroButton.pressed.connect(_on_spawn_hero.bind())
 	$UI/LevelButton.pressed.connect(_on_show_levels.bind())
 	$UI/ShopButton.pressed.connect(_on_show_shop.bind())
 	$UI/PauseButton.pressed.connect(_on_toggle_pause.bind())
@@ -165,6 +196,12 @@ func _setup_buttons():
 	$UI/PausePanel/VBox/RestartButton.pressed.connect(_on_restart.bind())
 	$UI/PausePanel/VBox/MenuButton.pressed.connect(_on_show_levels.bind())
 	$UI/FlashLayer/Timer.timeout.connect(_on_flash_timer.bind())
+	$UI/SkillTreePanel/VBox/CloseButton.pressed.connect(_on_close_skill_tree.bind())
+	$UI/SkillTreePanel/VBox/Skill1.pressed.connect(_on_unlock_skill.bind("damage_1"))
+	$UI/SkillTreePanel/VBox/Skill2.pressed.connect(_on_unlock_skill.bind("range_1"))
+	$UI/SkillTreePanel/VBox/Skill3.pressed.connect(_on_unlock_skill.bind("speed_1"))
+	$UI/SkillTreePanel/VBox/Skill4.pressed.connect(_on_unlock_skill.bind("gold_1"))
+	$UI/SkillTreePanel/VBox/Skill5.pressed.connect(_on_unlock_skill.bind("hero_1"))
 
 func _load_save():
 	var f = FileAccess.open("user://save.dat", FileAccess.READ)
@@ -307,6 +344,158 @@ func _complete_daily_challenge():
 		show_msg("🎉 每日挑战完成！+%d金币" % daily_challenge["bonus_gold"])
 		_save_game()
 
+# 技能树系统
+func _on_show_skill_tree():
+	_show_panel("skilltree")
+
+func _show_panel(name: String):
+	_hide_all_panels()
+	if name == "level":
+		showing_level_select = true
+		$UI/LevelSelectBG.visible = true
+		$UI/LevelPanel.visible = true
+		_update_level_buttons()
+	elif name == "shop":
+		showing_shop = true
+		$UI/ShopPanel.visible = true
+		_update_shop()
+	elif name == "pause":
+		showing_pause = true
+		$UI/PausePanel.visible = true
+	elif name == "skilltree":
+		showing_shop = true
+		$UI/SkillTreePanel.visible = true
+		_update_skill_tree_panel()
+	elif name == "skilltree":
+		showing_shop = true
+		$UI/SkillTreePanel.visible = true
+		_update_skill_tree_panel()
+
+func _update_skill_tree_panel():
+	$UI/SkillTreePanel/VBox/GoldLabel.text = "💰 %d" % gold
+	
+	var keys = ["damage_1", "range_1", "speed_1", "gold_1", "hero_1"]
+	var btns = ["Skill1", "Skill2", "Skill3", "Skill4", "Skill5"]
+	
+	for i in range(keys.size()):
+		var key = keys[i]
+		var btn = $UI/SkillTreePanel/VBox.get_node(btns[i])
+		var skill = SKILL_TREE[key]
+		var unlocked = key in skill_tree_unlocked
+		
+		if unlocked:
+			btn.text = "✅ %s\n已解锁" % skill["name"]
+			btn.disabled = true
+			btn.modulate = Color(0.3, 0.8, 0.3)
+		elif gold >= skill.cost:
+			btn.text = "%s\n%d金币\n%s" % [skill["name"], skill.cost, skill["desc"]]
+			btn.disabled = false
+			btn.modulate = Color(1, 1, 1)
+		else:
+			btn.text = "%s\n%d金币\n%s" % [skill["name"], skill.cost, skill["desc"]]
+			btn.disabled = true
+			btn.modulate = Color(0.5, 0.5, 0.5)
+
+# 英雄系统
+func _on_spawn_hero():
+	if not ("hero_1" in skill_tree_unlocked):
+		show_msg("需要先解锁英雄！")
+		return
+	
+	if hero and is_instance_valid(hero):
+		show_msg("英雄已在场！")
+		return
+	
+	hero = Node2D.new()
+	hero_damage = 20.0
+	hero_cooldown = 0.0
+	hero_range = 200.0
+	hero_level_mult = 1.0
+	add_child(hero)
+	
+	# 英雄视觉
+	var rect = ColorRect.new()
+	rect.size = Vector2(40, 40)
+	rect.color = Color(1.0, 0.5, 0.1)
+	hero.add_child(rect)
+	
+	# 英雄标签
+	var label = Label.new()
+	label.text = "🦸"
+	label.position = Vector2(-15, -40)
+	hero.add_child(label)
+	
+	hero.position = Vector2(400, 300)
+	show_msg("🦸 英雄登场！")
+	
+	_update_hero_button()
+
+func _update_hero_button():
+	if "hero_1" in skill_tree_unlocked:
+		$UI/HeroButton.visible = true
+		$UI/HeroButton.disabled = hero != null and is_instance_valid(hero)
+		$UI/HeroButton.text = "🦸 英雄" if not hero else "🦸 英雄已部署"
+	else:
+		$UI/HeroButton.visible = false
+
+func _apply_skill_effect(skill_key: String):
+	match skill_key:
+		"damage_1":
+			for t in towers:
+				if t: t.damage_mult *= 1.1
+		"damage_2":
+			for t in towers:
+				if t: t.damage_mult *= 1.2
+		"damage_3":
+			for t in towers:
+				if t: t.damage_mult *= 1.4
+		"range_1":
+			for t in towers:
+				if t: t.range_mult *= 1.1
+		"range_2":
+			for t in towers:
+				if t: t.range_mult *= 1.2
+		"speed_1":
+			for t in towers:
+				if t: t.fire_rate_mult *= 1.1
+		"speed_2":
+			for t in towers:
+				if t: t.fire_rate_mult *= 1.2
+		"gold_1":
+			save_data["gold_bonus"] = save_data.get("gold_bonus", 1.0) + 0.1
+		"gold_2":
+			save_data["gold_bonus"] = save_data.get("gold_bonus", 1.0) + 0.15
+		"hero_1":
+			_update_hero_button()
+		"hero_2":
+			hero_level_mult = 1.5
+
+func _process_hero(delta: float):
+	if hero and is_instance_valid(hero):
+		hero_cooldown -= delta
+		
+		if hero_cooldown <= 0 and not enemies.is_empty():
+			var nearest = null
+			var nearest_dist = hero_range
+			for e in enemies:
+				if e and is_instance_valid(e):
+					var dist = hero.global_position.distance_to(e.global_position)
+					if dist < nearest_dist:
+						nearest_dist = dist
+						nearest = e
+			
+			if nearest:
+				nearest.take_damage(hero_damage * hero_level_mult, "magic")
+				hero_cooldown = 1.0
+				var attack_rect = ColorRect.new()
+				attack_rect.size = Vector2(10, 10)
+				attack_rect.color = Color(1, 0.5, 0)
+				attack_rect.global_position = hero.global_position
+				add_child(attack_rect)
+				var t = create_tween()
+				t.tween_property(attack_rect, "global_position", nearest.global_position, 0.2)
+				t.tween_callback(attack_rect.queue_free)
+
 func _start_endless_wave():
 	if game_over:
 		return
@@ -376,21 +565,6 @@ func _on_select_level(n):
 
 func _on_show_shop():
 	_show_panel("shop")
-
-func _show_panel(name: String):
-	_hide_all_panels()
-	if name == "level":
-		showing_level_select = true
-		$UI/LevelSelectBG.visible = true
-		$UI/LevelPanel.visible = true
-		_update_level_buttons()
-	elif name == "shop":
-		showing_shop = true
-		$UI/ShopPanel.visible = true
-		_update_shop()
-	elif name == "pause":
-		showing_pause = true
-		$UI/PausePanel.visible = true
 
 func _update_level_buttons():
 	# 显示每日挑战信息
@@ -464,6 +638,30 @@ func _on_shop_damage():
 
 func _on_close_shop():
 	_show_panel("")
+
+func _on_close_skill_tree():
+	_show_panel("")
+
+func _on_unlock_skill(skill_key: String):
+	var skill = SKILL_TREE.get(skill_key)
+	if not skill:
+		return
+	if skill_key in skill_tree_unlocked:
+		show_msg("已解锁！")
+		return
+	if gold < skill.cost:
+		show_msg("金币不足！")
+		return
+	
+	gold -= skill.cost
+	skill_tree_unlocked.append(skill_key)
+	show_msg("🌳 解锁：%s" % skill["name"])
+	_save_game()
+	_update_skill_tree_panel()
+	_update_ui()
+	
+	# 应用技能效果
+	_apply_skill_effect(skill_key)
 
 func _on_toggle_pause():
 	if showing_level_select or showing_shop:
@@ -585,24 +783,23 @@ func _create_obstacle(type: String, pos: Vector2) -> Node2D:
 	return obs
 
 func _process_obstacles(delta: float):
-	for o in obstacles:
+	for i in range(obstacles.size()):
+		var o = obstacles[i]
 		if not is_instance_valid(o):
 			continue
-		var type = o.get("obstacle_type")
+		var type = o.get("obstacle_type") if o.has("obstacle_type") else "rock"
 		var pos = o.global_position
 		
-		# 地刺持续伤害
 		if type == "spike":
-			var dt = o.get("damage_timer", 1.0)
-			dt -= delta
-			o.set("damage_timer", dt)
-			if dt <= 0:
+			if not obstacle_damage_timers.has(i):
+				obstacle_damage_timers[i] = 1.0
+			obstacle_damage_timers[i] -= delta
+			if obstacle_damage_timers[i] <= 0:
 				for e in enemies:
 					if e and is_instance_valid(e) and e.global_position.distance_to(pos) < 25:
 						e.take_damage(5.0, "magic")
-				o.set("damage_timer", 1.0)
+				obstacle_damage_timers[i] = 1.0
 		
-		# 石头减速
 		if type == "rock":
 			for e in enemies:
 				if e and is_instance_valid(e) and e.global_position.distance_to(pos) < 25:
@@ -644,6 +841,7 @@ func _process(_d: float):
 		return
 	
 	_process_obstacles(_d)
+	_process_hero(_d)
 	
 	kill_streak_timer -= _d
 	if kill_streak_timer <= 0:

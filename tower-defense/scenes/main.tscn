@@ -118,6 +118,25 @@ theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
 theme_override_font_sizes/font_size = 20
 text = "📅挑战"
 
+[node name="SkillTreeButton" type="Button" parent="UI"]
+offset_left = 650.0
+offset_top = 80.0
+offset_right = 780.0
+offset_bottom = 120.0
+theme_override_colors/font_color = Color(0.6, 0.3, 0.9, 1)
+theme_override_font_sizes/font_size = 20
+text = "🌳技能"
+
+[node name="HeroButton" type="Button" parent="UI"]
+visible = false
+offset_left = 790.0
+offset_top = 80.0
+offset_right = 920.0
+offset_bottom = 120.0
+theme_override_colors/font_color = Color(1, 0.5, 0.1, 1)
+theme_override_font_sizes/font_size = 20
+text = "🦸 英雄"
+
 [node name="MessageLabel" type="Label" parent="UI"]
 anchors_horizontal_center = 0.5
 anchors_vertical_center = 0.5
@@ -326,6 +345,78 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
 theme_override_font_sizes/font_size = 28
 text = "📋 关卡选择"
+
+[node name="SkillTreePanel" type="PanelContainer" parent="UI"]
+visible = false
+anchors_horizontal_center = 0.5
+anchors_vertical_center = 0.5
+offset_left = -300.0
+offset_top = -300.0
+offset_right = 300.0
+offset_bottom = 300.0
+
+[node name="VBox" type="VBoxContainer" parent="UI/SkillTreePanel"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="UI/SkillTreePanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.3, 0.9, 1)
+theme_override_font_sizes/font_size = 36
+horizontal_alignment = 1
+text = "🌳 技能树"
+
+[node name="GoldLabel" type="Label" parent="UI/SkillTreePanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+theme_override_font_sizes/font_size = 28
+horizontal_alignment = 1
+text = "💰 200"
+
+[node name="Skill1" type="Button" parent="UI/SkillTreePanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.3, 0.3, 1)
+theme_override_font_sizes/font_size = 18
+text = "攻击强化I
+100金币
+所有塔伤害+10%"
+
+[node name="Skill2" type="Button" parent="UI/SkillTreePanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.5, 0.9, 1)
+theme_override_font_sizes/font_size = 18
+text = "射程强化I
+100金币
+所有塔射程+10%"
+
+[node name="Skill3" type="Button" parent="UI/SkillTreePanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.6, 0.2, 1)
+theme_override_font_sizes/font_size = 18
+text = "攻速强化I
+100金币
+所有塔攻速+10%"
+
+[node name="Skill4" type="Button" parent="UI/SkillTreePanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+theme_override_font_sizes/font_size = 18
+text = "金币强化I
+150金币
+击杀金币+10%"
+
+[node name="Skill5" type="Button" parent="UI/SkillTreePanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.5, 0.1, 1)
+theme_override_font_sizes/font_size = 18
+text = "英雄解锁
+500金币
+解锁英雄角色"
+
+[node name="CloseButton" type="Button" parent="UI/SkillTreePanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 24
+text = "关闭"
 
 [node name="TowerArrow" type="Button" parent="UI"]
 offset_left = 10.0
