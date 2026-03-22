@@ -93,3 +93,27 @@ func apply_slow(amount: float, duration: float) -> void:
 func die() -> void:
 	get_parent().add_gold(reward)
 	queue_free()
+
+func move_along_path(path: Array) -> void:
+	if reached_end or path.is_empty():
+		return
+	if slow_timer > 0:
+		slow_timer -= get_process_delta_time()
+	else:
+		slowed = 0.0
+	var current_speed = enemy_speed * (1.0 - slowed)
+	path_progress += current_speed * get_process_delta_time()
+	if path_index >= path.size() - 1:
+		reached_end = true
+		return
+	var p1 = path[path_index]
+	var p2 = path[path_index + 1]
+	var segment_length = p1.distance_to(p2)
+	if path_progress >= segment_length:
+		path_progress -= segment_length
+		path_index += 1
+		if path_index >= path.size() - 1:
+			reached_end = true
+			return
+	var t = path_progress / segment_length if segment_length > 0 else 0
+	global_position = p1.lerp(p2, t)
