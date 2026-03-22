@@ -41,8 +41,15 @@ var save_data: Dictionary = {
 	"achievements": [],
 	"total_gold": 0,
 	"total_kills": 0,
-	"daily_challenge": null
+	"daily_challenge": null,
+	"endless_best_wave": 0,
+	"daily_best_scores": {}
 }
+
+var endless_mode: bool = false
+var endless_wave: int = 0
+var endless_active: bool = false
+var endless_in_progress: bool = false
 
 var path_points: Array = [
 	Vector2(-50, 360), Vector2(200, 360), Vector2(200, 550),
@@ -111,6 +118,7 @@ func _setup_buttons():
 	$UI/TowerCannon.pressed.connect(_on_cannon.bind())
 	$UI/TowerMagic.pressed.connect(_on_magic.bind())
 	$UI/StartWaveButton.pressed.connect(_on_start_wave.bind())
+	$UI/StartEndlessButton.pressed.connect(_on_start_endless.bind())
 	$UI/LevelButton.pressed.connect(_on_show_levels.bind())
 	$UI/ShopButton.pressed.connect(_on_show_shop.bind())
 	$UI/PauseButton.pressed.connect(_on_toggle_pause.bind())
@@ -198,6 +206,9 @@ func _update_tower_buttons():
 		btns[t].modulate = colors[t] if selected_tower_type == t else Color(1, 1, 1)
 
 func _on_start_wave():
+	if endless_mode:
+		_start_endless_wave()
+		return
 	if showing_level_select or showing_shop or showing_pause or game_over:
 		return
 	if game_paused:
@@ -217,6 +228,60 @@ func _on_start_wave():
 		await get_tree().create_timer(ld["si"]).timeout
 		if not game_paused:
 			_spawn_enemy(wave, ld)
+
+func _on_start_endless():
+	if wave_in_progress or endless_in_progress:
+		show_msg("正在进行中！")
+		return
+	endless_mode = true
+	endless_wave = 0
+	endless_active = true
+	gold = 100
+	lives = 10
+	wave = 0
+	game_over = false
+	_update_ui()
+	_show_panel("")
+	show_msg("⚡ 无尽模式开始！生存挑战！")
+	_start_endless_wave()
+
+func _start_endless_wave():
+	if game_over:
+		return
+	endless_wave += 1
+	endless_in_progress = true
+	show_msg("⚡ 无尽波次 %d 来袭！" % endless_wave)
+	_update_ui()
+	
+	var enemy_count = 3 + endless_wave * 2
+	var spawn_interval = max(0.3, 1.5 - endless_wave * 0.05)
+	var enemy_types = ["normal", "fast", "armor", "magic_resist", "shadow", "healer", "elite"]
+	
+	# 无尽模式敌人越来越强
+	for i in range(enemy_count):
+		await get_tree().create_timer(spawn_interval).timeout
+		if game_over:
+			return
+		var etype = enemy_types[randi() % enemy_types.size()]
+		var edata = ENEMY_TYPES[etype]
+		var scene = load("res://scenes/enemy.tscn")
+		var e = scene.instantiate()
+		e.enemy_type = etype
+		e.max_health = edata.health * (1.0 + endless_wave * 0.15)
+		e.health = e.max_health
+		e.speed = edata.speed * (1.0 + endless_wave * 0.02)
+		e.reward = edata.reward + endless_wave * 2
+		e.armor = edata.armor
+		e.magic_resist = edata.magic_resist
+		e.enemy_name = edata.name
+		e.enemy_icon = edata.icon
+		e.path_index = 0
+		e.path_progress = 0
+		e.reached_end = false
+		e.enemy_path = path_points.duplicate()
+		e.add_to_group("enemies")
+		add_child(e)
+		enemies.append(e)
 
 func _spawn_enemy(wave_num: int, ld):
 	var etype = ld["e"][randi() % ld["e"].size()]
@@ -472,6 +537,14 @@ func _process(_d: float):
 		_on_wave_done()
 
 func _on_wave_done():
+	if endless_active:
+		# 无尽模式
+		gold += 20 + endless_wave * 5
+		show_msg("无尽波次 %d 完成！+%d金币" % [endless_wave, 20 + endless_wave * 5])
+		endless_in_progress = false
+		_update_ui()
+		return
+	
 	var ld = LVL(selected_level)
 	if wave >= ld["w"]:
 		gold += ld["r"]
@@ -489,8 +562,12 @@ func _on_wave_done():
 
 func _trigger_game_over():
 	game_over = true
+	if endless_active and endless_wave > save_data.get("endless_best_wave", 0):
+		save_data["endless_best_wave"] = endless_wave
+		show_msg("💀 游戏结束！无尽模式到达第%d波！新纪录！" % endless_wave)
+	else:
+		show_msg("💀 游戏结束！")
 	_save_game()
-	show_msg("游戏结束！")
 	$UI/PausePanel.visible = true
 
 func _update_ui():
