@@ -142,7 +142,7 @@ func _spawn_enemy(wave_num: int, ld):
 	e.path_index = 0
 	e.path_progress = 0
 	e.reached_end = false
-	e.add_to_group("enemies")
+	e.setup(path_points, edata.speed)
 	add_child(e)
 	enemies.append(e)
 
@@ -316,6 +316,10 @@ func _update_ui():
 	$UI/TopBar/HBox/LivesLabel.text = "❤️ %d" % lives
 	$UI/TopBar/HBox/WaveLabel.text = "🌊 %d/%d" % [wave, LVL(selected_level)["w"]]
 	$UI/TopBar/HBox/LevelName.text = LVL(selected_level)["n"]
+
+func add_gold(amount: int):
+	gold += amount
+	_update_ui()
 
 func show_msg(msg: String):
 	$UI/MessageLabel.text = msg
