@@ -112,14 +112,14 @@ func _process(delta: float) -> void:
 		reached_end = true
 		return
 	
-	var p1 = path[path_index]
-	var p2 = path[path_index + 1]
+	var p1 = enemy_path[path_index]
+	var p2 = enemy_path[path_index + 1]
 	var segment_length = p1.distance_to(p2)
 	
 	if path_progress >= segment_length:
 		path_progress -= segment_length
 		path_index += 1
-		if path_index >= path.size() - 1:
+		if path_index >= enemy_path.size() - 1:
 			reached_end = true
 			return
 	
