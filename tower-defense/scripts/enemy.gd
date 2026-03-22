@@ -18,6 +18,7 @@ var is_boss: bool = false
 var boss_data: Dictionary = {}
 
 var game_node: Node
+var path: Array = []
 
 @onready var health_bar: ProgressBar = $HealthBar
 @onready var enemy_sprite: ColorRect = $EnemySprite
@@ -41,6 +42,7 @@ func _ready() -> void:
 	type_icon.tooltip_text = enemy_name
 	
 	game_node = get_parent()
+	path = game_node.path_points.duplicate()
 
 func _process(delta: float) -> void:
 	if reached_end:
