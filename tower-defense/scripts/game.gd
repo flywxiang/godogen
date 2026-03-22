@@ -39,6 +39,13 @@ var combo_count: int = 0
 var obstacles: Array = []
 var selected_obstacle: String = ""
 
+# 每日挑战
+var daily_challenge: Dictionary = {
+	"level": 1,
+	"bonus_gold": 500,
+	"special_rule": "双倍伤害"
+}
+
 const OBSTACLE_TYPES = {
 	"rock": {"cost": 30, "name": "石头", "desc": "减速敌人50%", "color": Color(0.5, 0.5, 0.5)},
 	"spike": {"cost": 50, "name": "地刺", "desc": "持续伤害", "color": Color(0.7, 0.3, 0.3)},
@@ -53,7 +60,10 @@ var save_data: Dictionary = {
 	"total_kills": 0,
 	"daily_challenge": null,
 	"endless_best_wave": 0,
-	"daily_best_scores": {}
+	"daily_best_scores": {},
+	"star_ratings": {},  # {"level_1": 3, "level_2": 2, ...}
+	"daily_challenge_completed": false,
+	"daily_challenge_date": ""
 }
 
 var endless_mode: bool = false
@@ -129,6 +139,7 @@ func _setup_buttons():
 	$UI/TowerMagic.pressed.connect(_on_magic.bind())
 	$UI/StartWaveButton.pressed.connect(_on_start_wave.bind())
 	$UI/StartEndlessButton.pressed.connect(_on_start_endless.bind())
+	$UI/DailyChallengeButton.pressed.connect(_on_daily_challenge.bind())
 	$UI/LevelButton.pressed.connect(_on_show_levels.bind())
 	$UI/ShopButton.pressed.connect(_on_show_shop.bind())
 	$UI/PauseButton.pressed.connect(_on_toggle_pause.bind())
@@ -162,6 +173,26 @@ func _load_save():
 		if data:
 			save_data = data
 		f.close()
+	
+	# 生成今日挑战
+	_generate_daily_challenge()
+
+func _generate_daily_challenge():
+	var today = Time.get_date_string_from_system()
+	if save_data.get("daily_challenge_date", "") != today:
+		# 随机生成每日挑战
+		var levels = [1, 2, 3, 4, 5]
+		var level = levels[randi() % levels.size()]
+		var rules = ["双倍伤害", "无塔挑战", "极速模式", "生命守护", "金币翻倍"]
+		var rule = rules[randi() % rules.size()]
+		daily_challenge = {
+			"level": level,
+			"bonus_gold": 200 + level * 100,
+			"special_rule": rule
+		}
+		save_data["daily_challenge_date"] = today
+		save_data["daily_challenge_completed"] = false
+		_save_game()
 
 func _save_game():
 	var f = FileAccess.open("user://save.dat", FileAccess.WRITE)
@@ -258,6 +289,24 @@ func _on_start_endless():
 	show_msg("⚡ 无尽模式开始！生存挑战！")
 	_start_endless_wave()
 
+func _on_daily_challenge():
+	if save_data.get("daily_challenge_completed", false):
+		show_msg("今日挑战已完成！明天再来！")
+		return
+	
+	selected_level = daily_challenge["level"]
+	_start_level(selected_level)
+	gold += daily_challenge["bonus_gold"]
+	show_msg("📅 每日挑战：%s！+%d金币" % [daily_challenge["special_rule"], daily_challenge["bonus_gold"]])
+	_update_ui()
+
+func _complete_daily_challenge():
+	if not save_data.get("daily_challenge_completed", false):
+		save_data["daily_challenge_completed"] = true
+		gold += daily_challenge["bonus_gold"]
+		show_msg("🎉 每日挑战完成！+%d金币" % daily_challenge["bonus_gold"])
+		_save_game()
+
 func _start_endless_wave():
 	if game_over:
 		return
@@ -344,10 +393,22 @@ func _show_panel(name: String):
 		$UI/PausePanel.visible = true
 
 func _update_level_buttons():
+	# 显示每日挑战信息
+	var challenge_text = "📅 今日挑战：第%d关 - %s" % [daily_challenge["level"], daily_challenge["special_rule"]]
+	if save_data.get("daily_challenge_completed", false):
+		challenge_text += " ✅已完成"
+	$UI/LevelPanel/VBox/ChallengeLabel.text = challenge_text
+	
 	for i in range(1, 6):
 		var btn = $UI.get_node_or_null("LevelPanel/VBox/Grid/Level%d" % i)
 		if btn:
 			btn.disabled = false
+			# 显示星级
+			var key = "level_%d" % i
+			var stars = save_data["star_ratings"].get(key, 0)
+			var star_str = "⭐" if stars > 0 else ""
+			btn.text = "第%d关\n%s" % [i, star_str]
+			
 			if i in level_progress:
 				btn.modulate = Color(0.3, 0.8, 0.3)
 			elif i <= level_progress[-1] + 1:
@@ -636,15 +697,37 @@ func _on_wave_done():
 		gold += ld["r"]
 		if selected_level < 5 and not (selected_level + 1 in level_progress):
 			level_progress.append(selected_level + 1)
+		
+		# 星级评价
+		var stars = _calculate_stars()
+		var key = "level_%d" % selected_level
+		var prev_stars = save_data["star_ratings"].get(key, 0)
+		if stars > prev_stars:
+			save_data["star_ratings"][key] = stars
+			show_msg("⭐ 通关！%d星评价！新纪录！" % stars)
+		else:
+			show_msg("🎉 通关！%d星评价！" % stars)
+		
 		_save_game()
 		_check_achievement("wave_5" if wave >= 5 else "wave_10")
-		show_msg("🎉 通关！+%d金币" % ld["r"])
+		# 每日挑战完成检查
+		if selected_level == daily_challenge["level"] and not save_data.get("daily_challenge_completed", false):
+			_complete_daily_challenge()
 		wave_in_progress = false
 	else:
 		wave_in_progress = false
 		gold += 50
 		show_msg("波次完成！+50金币")
 	_update_ui()
+
+func _calculate_stars() -> int:
+	# 星级计算：基于剩余生命和金币
+	var stars = 1
+	if lives >= 10:
+		stars = 2
+	if lives >= 15 and gold >= 200:
+		stars = 3
+	return stars
 
 func _trigger_game_over():
 	game_over = true

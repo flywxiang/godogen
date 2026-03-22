@@ -109,6 +109,15 @@ theme_override_colors/font_color = Color(0.9, 0.3, 0.3, 1)
 theme_override_font_sizes/font_size = 20
 text = "⚡无尽"
 
+[node name="DailyChallengeButton" type="Button" parent="UI"]
+offset_left = 490.0
+offset_top = 80.0
+offset_right = 640.0
+offset_bottom = 120.0
+theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
+theme_override_font_sizes/font_size = 20
+text = "📅挑战"
+
 [node name="MessageLabel" type="Label" parent="UI"]
 anchors_horizontal_center = 0.5
 anchors_vertical_center = 0.5
@@ -153,6 +162,13 @@ theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
 theme_override_font_sizes/font_size = 36
 horizontal_alignment = 1
 text = "🎮 选择关卡"
+
+[node name="ChallengeLabel" type="Label" parent="UI/LevelPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.6, 0.2, 1)
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+text = "📅 今日挑战：第1关 - 双倍伤害"
 
 [node name="Grid" type="GridContainer" parent="UI/LevelPanel/VBox"]
 layout_mode = 2

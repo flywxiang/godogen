@@ -1,2 +1,4 @@
 res://scripts/game.gd
 res://scripts/enemy.gd
+res://scripts/levels.gd
+res://scripts/test_game.gd
