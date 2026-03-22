@@ -12,16 +12,16 @@ var game_over: bool = false
 var selected_tower_type: String = ""
 
 const TOWER_TYPES = {
-	"arrow": {"cost": 50, "damage": 10, "range": 150, "fire_rate": 1.2, "color": Color(0.2, 0.6, 0.2)},
-	"cannon": {"cost": 100, "damage": 30, "range": 120, "fire_rate": 0.5, "color": Color(0.8, 0.4, 0.1)},
-	"magic": {"cost": 80, "damage": 15, "range": 180, "fire_rate": 0.8, "color": Color(0.4, 0.2, 0.8)}
+	"arrow": {"cost": 50, "damage": 10, "range": 150, "fire_rate": 1.2, "color": Color(0.3, 0.7, 0.3), "icon": "🏹"},
+	"cannon": {"cost": 100, "damage": 30, "range": 120, "fire_rate": 0.5, "color": Color(0.9, 0.5, 0.2), "icon": "💣"},
+	"magic": {"cost": 80, "damage": 15, "range": 180, "fire_rate": 0.8, "color": Color(0.5, 0.3, 0.9), "icon": "✨"}
 }
 
 const ENEMY_TYPES = {
-	"normal": {"health": 100, "speed": 100, "reward": 10},
-	"fast": {"health": 60, "speed": 160, "reward": 15},
-	"armor": {"health": 200, "speed": 60, "reward": 25},
-	"magic_resist": {"health": 120, "speed": 90, "reward": 20}
+	"normal": {"health": 100, "speed": 100, "reward": 10, "icon": "👹", "color": Color(0.9, 0.3, 0.3)},
+	"fast": {"health": 60, "speed": 160, "reward": 15, "icon": "⚡", "color": Color(1, 0.8, 0.2)},
+	"armor": {"health": 200, "speed": 60, "reward": 25, "icon": "🛡️", "color": Color(0.5, 0.5, 0.6)},
+	"magic_resist": {"health": 120, "speed": 90, "reward": 20, "icon": "🔮", "color": Color(0.4, 0.2, 0.6)}
 }
 
 func _ready():
@@ -48,7 +48,6 @@ func _load_map():
 		current_map = map_scene.instantiate()
 		$MapContainer.add_child(current_map)
 		
-		# 更新UI显示地图名
 		if current_map.has("map_name"):
 			$UI/TopBar/HBox/LevelName.text = current_map.map_name
 	else:
@@ -60,7 +59,6 @@ func _process(_delta: float):
 	if game_over or wave_in_progress:
 		return
 	
-	# 更新敌人位置
 	for e in enemies:
 		if is_instance_valid(e):
 			e.move_along_path(current_map.get_path_points() if current_map else [])
@@ -84,7 +82,7 @@ func _on_select_magic():
 	_update_tower_buttons()
 
 func _update_tower_buttons():
-	var colors = {"arrow": Color(0.2, 0.6, 0.2), "cannon": Color(0.8, 0.4, 0.1), "magic": Color(0.4, 0.2, 0.8)}
+	var colors = {"arrow": Color(0.3, 0.7, 0.3), "cannon": Color(0.9, 0.5, 0.2), "magic": Color(0.5, 0.3, 0.9)}
 	var btns = {"arrow": $UI/TowerPanel/TowerArrow, "cannon": $UI/TowerPanel/TowerCannon, "magic": $UI/TowerPanel/TowerMagic}
 	for t in ["arrow", "cannon", "magic"]:
 		btns[t].modulate = colors[t] if selected_tower_type == t else Color(1, 1, 1)
@@ -96,19 +94,33 @@ func _place_tower(pos: Vector2):
 		return
 	
 	gold -= td.cost
+	
+	# 创建塔容器
 	var tower = Node2D.new()
 	tower.position = pos
 	
-	var rect = ColorRect.new()
-	rect.size = Vector2(40, 40)
-	rect.color = td.color
-	tower.add_child(rect)
+	# 塔底座
+	var base = ColorRect.new()
+	base.size = Vector2(50, 50)
+	base.color = Color(0.3, 0.3, 0.35)
+	tower.add_child(base)
+	
+	# 塔图标（用Label模拟emoji）
+	var icon = Label.new()
+	icon.text = td.icon
+	icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	icon.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	icon.size = Vector2(50, 50)
+	icon.position = Vector2(0, -5)
+	icon.add_theme_font_size_override("font_size", 36)
+	tower.add_child(icon)
 	
 	tower.set("tower_type", selected_tower_type)
 	tower.set("damage", td.damage)
 	tower.set("range", td.range)
 	tower.set("fire_rate", td.fire_rate)
 	tower.set("fire_cooldown", 0.0)
+	tower.set("tower_icon", td.icon)
 	
 	add_child(tower)
 	towers.append(tower)
@@ -139,20 +151,46 @@ func _spawn_enemy(type: String):
 	var edata = ENEMY_TYPES.get(type, ENEMY_TYPES["normal"])
 	var enemy = Node2D.new()
 	
-	var rect = ColorRect.new()
-	rect.size = Vector2(30, 30)
-	rect.color = Color(0.9, 0.3, 0.3)
-	enemy.add_child(rect)
+	# 敌人底座
+	var base = ColorRect.new()
+	base.size = Vector2(35, 35)
+	base.color = edata.color
+	enemy.add_child(base)
+	
+	# 敌人图标
+	var icon = Label.new()
+	icon.text = edata.icon
+	icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	icon.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	icon.size = Vector2(35, 35)
+	icon.position = Vector2(0, -3)
+	icon.add_theme_font_size_override("font_size", 28)
+	enemy.add_child(icon)
+	
+	# 生命条背景
+	var hp_bg = ColorRect.new()
+	hp_bg.size = Vector2(35, 5)
+	hp_bg.position = Vector2(-17, -25)
+	hp_bg.color = Color(0.2, 0.2, 0.2)
+	enemy.add_child(hp_bg)
+	
+	# 生命条
+	var hp_bar = ColorRect.new()
+	hp_bar.size = Vector2(35, 5)
+	hp_bar.position = Vector2(-17, -25)
+	hp_bar.color = Color(0.2, 0.9, 0.2)
+	hp_bar.set("hp_bar", true)
+	enemy.add_child(hp_bar)
 	
 	enemy.set("enemy_type", type)
 	enemy.set("max_health", edata.health)
 	enemy.set("health", edata.health)
 	enemy.set("speed", edata.speed)
 	enemy.set("reward", edata.reward)
+	enemy.set("enemy_icon", edata.icon)
 	enemy.set("path_index", 0)
 	enemy.set("path_progress", 0.0)
 	enemy.set("reached_end", false)
-	enemy.set("move_timer", 0.0)
 	
 	add_child(enemy)
 	enemies.append(enemy)
@@ -187,16 +225,23 @@ func move_along_path(path_points: Array):
 	
 	self.set("path_index", idx)
 	self.set("path_progress", progress)
+	
+	# 更新生命条
+	for child in get_children():
+		if child.has("hp_bar") and child.hp_bar:
+			var hp = self.get("health")
+			var max_hp = self.get("max_health")
+			child.size.x = 35 * (hp / max_hp) if max_hp > 0 else 0
 
 func _on_back():
 	get_tree().change_scene_to_file("res://scenes/ui/level_select.tscn")
 
 func _on_pause():
 	get_tree().paused = !get_tree().paused
-	show_msg("暂停" if get_tree().paused else "继续")
+	show_msg("⏸️ 暂停" if get_tree().paused else "▶ 继续")
 
 func _on_shop():
-	show_msg("商店功能开发中...")
+	show_msg("🏪 商店功能开发中...")
 
 func _update_ui():
 	$UI/TopBar/HBox/GoldLabel.text = "💰 %d" % gold
