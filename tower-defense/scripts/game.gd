@@ -74,6 +74,19 @@ const SHOP_ITEMS = {
 	"damage_up": {"name": "力量光环", "cost": 120, "desc": "所有塔伤害+30%"}
 }
 
+const PLAYER_SKILLS = {
+	"lightning": {"name": "⚡雷电", "cost": 0, "cooldown": 15.0, "desc": "对所有敌人造成伤害", "color": Color(0.9, 0.9, 0.2)},
+	"freeze": {"name": "❄️冰冻", "cost": 0, "cooldown": 20.0, "desc": "冻结所有敌人3秒", "color": Color(0.4, 0.8, 1.0)},
+	"heal": {"name": "💚治疗", "cost": 0, "cooldown": 30.0, "desc": "恢复30生命", "color": Color(0.2, 0.9, 0.4)}
+}
+
+var skill_cooldowns: Dictionary = {
+	"lightning": 0.0,
+	"freeze": 0.0,
+	"heal": 0.0
+}
+var skill_active: String = ""
+
 const ACHIEVEMENTS = {
 	"first_blood": {"name": "初战告捷", "desc": "击杀第一个敌人", "reward": 20},
 	"kill_10": {"name": "杀手", "desc": "击杀10个敌人", "reward": 50},
@@ -101,6 +114,9 @@ func _setup_buttons():
 	$UI/LevelButton.pressed.connect(_on_show_levels.bind())
 	$UI/ShopButton.pressed.connect(_on_show_shop.bind())
 	$UI/PauseButton.pressed.connect(_on_toggle_pause.bind())
+	$UI/SkillLightning.pressed.connect(_on_skill_lightning.bind())
+	$UI/SkillFreeze.pressed.connect(_on_skill_freeze.bind())
+	$UI/SkillHeal.pressed.connect(_on_skill_heal.bind())
 	
 	for i in range(1, 6):
 		var btn = $UI.get_node_or_null("LevelPanel/VBox/Grid/Level%d" % i)
@@ -116,6 +132,7 @@ func _setup_buttons():
 	$UI/PausePanel/VBox/ResumeButton.pressed.connect(_on_toggle_pause.bind())
 	$UI/PausePanel/VBox/RestartButton.pressed.connect(_on_restart.bind())
 	$UI/PausePanel/VBox/MenuButton.pressed.connect(_on_show_levels.bind())
+	$UI/FlashLayer/Timer.timeout.connect(_on_flash_timer.bind())
 
 func _load_save():
 	var f = FileAccess.open("user://save.dat", FileAccess.READ)
@@ -407,6 +424,12 @@ func _create_tower(type: String, pos: Vector2) -> Node2D:
 	return t
 
 func _process(_d: float):
+	# 更新技能冷却
+	for skill in skill_cooldowns:
+		if skill_cooldowns[skill] > 0:
+			skill_cooldowns[skill] -= _d
+	_update_skill_buttons()
+	
 	if game_over or showing_level_select or showing_shop or game_paused:
 		return
 	
@@ -484,6 +507,21 @@ func show_msg(msg: String):
 	$UI/MessageLabel.visible = true
 	$UI/MessageLabel/Timer.start(3.0)
 
+func show_screen_flash(color: Color = Color(1, 1, 1)):
+	$UI/FlashLayer.color = Color(color.r, color.g, color.b, 0.3)
+	$UI/FlashLayer/Timer.start(0.1)
+
+func _on_flash_timer():
+	$UI/FlashLayer.visible = false
+
+func screen_shake(intensity: float = 5.0):
+	var t = create_tween()
+	var base_pos = Vector2(0, 0)
+	for i in range(3):
+		var offset = Vector2(randf_range(-intensity, intensity), randf_range(-intensity, intensity))
+		t.tween_property($Camera, "offset", offset, 0.05)
+		t.tween_property($Camera, "offset", Vector2.ZERO, 0.05)
+
 func add_gold(amount: int):
 	gold += amount
 	_update_ui()
@@ -516,3 +554,60 @@ func _check_achievement(key: String):
 	show_msg("🏆 成就解锁：%s！+%d金币" % [ach["name"], ach["reward"]])
 	_update_ui()
 	_save_game()
+
+# 特殊技能
+func _on_skill_lightning():
+	if skill_cooldowns["lightning"] > 0:
+		show_msg("⚡技能冷却中...")
+		return
+	skill_cooldowns["lightning"] = PLAYER_SKILLS["lightning"]["cooldown"]
+	# 对所有敌人造成伤害
+	var damage = 50.0
+	for e in enemies:
+		if e and is_instance_valid(e):
+			e.take_damage(damage, "lightning")
+	show_msg("⚡雷电打击！-%d伤害" % int(damage))
+	_update_skill_buttons()
+
+func _on_skill_freeze():
+	if skill_cooldowns["freeze"] > 0:
+		show_msg("❄️技能冷却中...")
+		return
+	skill_cooldowns["freeze"] = PLAYER_SKILLS["freeze"]["cooldown"]
+	# 冻结所有敌人3秒
+	for e in enemies:
+		if e and is_instance_valid(e):
+			e.apply_slow(0.99, 3.0)
+	show_msg("❄️冰冻全场！敌人冻结3秒")
+	_update_skill_buttons()
+
+func _on_skill_heal():
+	if skill_cooldowns["heal"] > 0:
+		show_msg("💚技能冷却中...")
+		return
+	skill_cooldowns["heal"] = PLAYER_SKILLS["heal"]["cooldown"]
+	lives = min(100, lives + 30)
+	show_msg("💚治疗！生命+30")
+	_update_ui()
+	_update_skill_buttons()
+
+func _update_skill_buttons():
+	var lightning_cd = skill_cooldowns["lightning"]
+	var freeze_cd = skill_cooldowns["freeze"]
+	var heal_cd = skill_cooldowns["heal"]
+	
+	$UI/SkillLightning.text = "⚡%s\n%.0f秒" % [PLAYER_SKILLS["lightning"]["name"], max(0, lightning_cd)]
+	$UI/SkillFreeze.text = "❄️%s\n%.0f秒" % [PLAYER_SKILLS["freeze"]["name"], max(0, freeze_cd)]
+	$UI/SkillHeal.text = "💚%s\n%.0f秒" % [PLAYER_SKILLS["heal"]["name"], max(0, heal_cd)]
+	
+	$UI/SkillLightning.disabled = lightning_cd > 0
+	$UI/SkillFreeze.disabled = freeze_cd > 0
+	$UI/SkillHeal.disabled = heal_cd > 0
+	
+	# 冷却时变灰
+	var lightning_modulate = Color(0.5, 0.5, 0.5) if lightning_cd > 0 else Color(1, 1, 0.3)
+	var freeze_modulate = Color(0.5, 0.5, 0.5) if freeze_cd > 0 else Color(0.4, 0.8, 1)
+	var heal_modulate = Color(0.5, 0.5, 0.5) if heal_cd > 0 else Color(0.2, 0.9, 0.4)
+	$UI/SkillLightning.modulate = lightning_modulate
+	$UI/SkillFreeze.modulate = freeze_modulate
+	$UI/SkillHeal.modulate = heal_modulate

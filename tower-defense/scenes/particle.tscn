@@ -1,0 +1,32 @@
+[gd_scene format=3 uid="uid://part01"]
+
+[node name="Particles" type="Node2D"]
+
+[node name="Particles1" type="ColorRect" parent="."]
+offset_left = -4.0
+offset_top = -4.0
+offset_right = 4.0
+offset_bottom = 4.0
+color = Color(0.9, 0.3, 0.3, 1)
+script = null
+
+[node name="Particles2" type="ColorRect" parent="."]
+offset_left = -4.0
+offset_top = -4.0
+offset_right = 4.0
+offset_bottom = 4.0
+color = Color(0.9, 0.3, 0.3, 1)
+
+[node name="Particles3" type="ColorRect" parent="."]
+offset_left = -4.0
+offset_top = -4.0
+offset_right = 4.0
+offset_bottom = 4.0
+color = Color(0.9, 0.3, 0.3, 1)
+
+[node name="Particles4" type="ColorRect" parent="."]
+offset_left = -4.0
+offset_top = -4.0
+offset_right = 4.0
+offset_bottom = 4.0
+color = Color(0.9, 0.3, 0.3, 1)

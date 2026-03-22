@@ -26,6 +26,7 @@ var heal_timer: float = 0.0
 var invisible_timer: float = 0.0
 var is_invisible: bool = false
 var teleport_timer: float = 0.0
+var particles_emitted: bool = false
 
 @onready var health_bar: ProgressBar = $HealthBar
 @onready var enemy_sprite: ColorRect = $EnemySprite
@@ -154,4 +155,6 @@ func apply_slow(amount: float, duration: float) -> void:
 func die() -> void:
 	get_parent().add_gold(reward)
 	get_parent().add_kill()
+	# 死亡特效 - 闪光
+	get_parent().show_screen_flash(enemy_sprite.color)
 	queue_free()
