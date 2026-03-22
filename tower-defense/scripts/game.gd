@@ -850,7 +850,6 @@ func _process(_d: float):
 	var to_rm = []
 	for e in enemies:
 		if e and is_instance_valid(e):
-			e.move_along_path(path_points)
 			if e.reached_end:
 				lives -= 1
 				to_rm.append(e)
