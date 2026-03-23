@@ -1,6 +1,7 @@
 extends Node2D
 
 var current_map: Node2D = null
+var particles_effects: Array = []
 var enemies: Array = []
 var towers: Array = []
 var gold: int = 200
@@ -28,6 +29,12 @@ func _ready():
 	randomize()
 	_setup_buttons()
 	_load_map()
+	
+	# 添加音乐管理器
+	var music = Node.new()
+	music.set_script(load("res://scripts/music_manager.gd"))
+	add_child(music)
+	set("music_manager", music)
 
 func _setup_buttons():
 	$UI/TowerPanel/TowerArrow.pressed.connect(_on_select_arrow)
@@ -37,6 +44,7 @@ func _setup_buttons():
 	$UI/BackButton.pressed.connect(_on_back)
 	$UI/PauseButton.pressed.connect(_on_pause)
 	$UI/ShopButton.pressed.connect(_on_shop)
+	$UI/MusicButton.pressed.connect(_on_toggle_music)
 
 func _load_map():
 	var map_path = Global.selected_map
@@ -62,9 +70,70 @@ func _process(_delta: float):
 	for e in enemies:
 		if is_instance_valid(e):
 			e.move_along_path(current_map.get_path_points() if current_map else [])
+	
+	# 更新特效
+	_update_particles(_delta)
+
+func _update_particles(delta: float):
+	var to_remove = []
+	for p in particles_effects:
+		if is_instance_valid(p):
+			var lifetime = p.get("lifetime", 1.0)
+			lifetime -= delta
+			p.set("lifetime", lifetime)
+			if lifetime <= 0:
+				to_remove.append(p)
+				p.queue_free()
+		else:
+			to_remove.append(p)
+	for p in to_remove:
+		particles_effects.erase(p)
+
+func _create_hit_effect(pos: Vector2, color: Color):
+	# 打击特效 - 扩散圆圈
+	for i in range(8):
+		var particle = Node2D.new()
+		particle.position = pos
+		particle.set("lifetime", 0.3)
+		particle.set("dir", Vector2(cos(i * PI / 4), sin(i * PI / 4)))
+		particle.set("color", color)
+		add_child(particle)
+		particles_effects.append(particle)
+		
+		var circle = ColorRect.new()
+		circle.size = Vector2(8, 8)
+		circle.color = color
+		particle.add_child(circle)
+
+func _create_death_effect(pos: Vector2, color: Color):
+	# 死亡特效 - 大爆炸
+	for i in range(12):
+		var particle = Node2D.new()
+		particle.position = pos
+		particle.set("lifetime", 0.5)
+		particle.set("dir", Vector2(cos(i * PI / 6), sin(i * PI / 6)))
+		particle.set("color", color)
+		particle.set("speed", 150.0)
+		add_child(particle)
+		particles_effects.append(particle)
+		
+		var circle = ColorRect.new()
+		circle.size = Vector2(12, 12)
+		circle.color = color
+		particle.add_child(circle)
+
+func _create_coin_effect(pos: Vector2):
+	# 金币特效 - 向上飘的金币图标
+	var coin = Label.new()
+	coin.text = "💰"
+	coin.position = pos + Vector2(-10, -20)
+	coin.set("lifetime", 1.0)
+	coin.set("velocity", Vector2(0, -50))
+	add_child(coin)
+	particles_effects.append(coin)
 
 func _input(event: InputEvent):
-	if event is InputEventScreenTouch and event.pressed:
+	if event is InputEventMouseButton and event.pressed:
 		var pos = event.position
 		if selected_tower_type != "" and pos.y < 600:
 			_place_tower(pos)
@@ -125,7 +194,11 @@ func _place_tower(pos: Vector2):
 	add_child(tower)
 	towers.append(tower)
 	_update_ui()
-	show_msg("塔已放置！")
+	show_msg("🏹 塔已放置！")
+	
+	# 播放放置音效
+	var music = get("music_manager")
+	if music: music.play_shoot()
 
 func _on_start_wave():
 	if wave_in_progress or game_over:
@@ -233,6 +306,24 @@ func move_along_path(path_points: Array):
 			var max_hp = self.get("max_health")
 			child.size.x = 35 * (hp / max_hp) if max_hp > 0 else 0
 
+# 特效动画更新
+func _process_effects(delta: float):
+	for p in particles_effects:
+		if is_instance_valid(p) and p.has("dir"):
+			var dir = p.get("dir", Vector2.ZERO)
+			var speed = p.get("speed", 100.0)
+			p.position += dir * speed * delta
+			var lifetime = p.get("lifetime", 1.0)
+			p.modulate.a = lifetime
+		elif is_instance_valid(p) and p.has("velocity"):
+			var vel = p.get("velocity", Vector2.ZERO)
+			p.position += vel * delta
+			var lifetime = p.get("lifetime", 1.0)
+			p.modulate.a = lifetime
+			var hp = self.get("health")
+			var max_hp = self.get("max_health")
+			child.size.x = 35 * (hp / max_hp) if max_hp > 0 else 0
+
 func _on_back():
 	get_tree().change_scene_to_file("res://scenes/ui/level_select.tscn")
 
@@ -242,6 +333,12 @@ func _on_pause():
 
 func _on_shop():
 	show_msg("🏪 商店功能开发中...")
+
+func _on_toggle_music():
+	var music = get("music_manager")
+	if music:
+		var enabled = music.toggle_sfx()
+		show_msg("🔊 音效已开启" if enabled else "🔇 音效已关闭")
 
 func _update_ui():
 	$UI/TopBar/HBox/GoldLabel.text = "💰 %d" % gold

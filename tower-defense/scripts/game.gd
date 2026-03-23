@@ -101,10 +101,10 @@ var endless_active: bool = false
 var endless_in_progress: bool = false
 
 var path_points: Array = [
-	Vector2(-50, 360), Vector2(200, 360), Vector2(200, 550),
-	Vector2(450, 550), Vector2(450, 200), Vector2(700, 200),
-	Vector2(700, 400), Vector2(950, 400), Vector2(950, 300),
-	Vector2(1150, 300), Vector2(1300, 300)
+	Vector2(50, 360), Vector2(250, 360), Vector2(250, 550),
+	Vector2(500, 550), Vector2(500, 200), Vector2(750, 200),
+	Vector2(750, 400), Vector2(1000, 400), Vector2(1000, 300),
+	Vector2(1200, 300), Vector2(1350, 300)
 ]
 
 const TOWER_TYPES = {
@@ -680,7 +680,7 @@ func _on_restart():
 	show_msg("重新开始！")
 
 func _input(event: InputEvent):
-	if event is InputEventScreenTouch and event.pressed:
+	if event is InputEventMouseButton and event.pressed:
 		var pos = event.position
 		_handle_tap(pos)
 
@@ -806,7 +806,7 @@ func _process_obstacles(delta: float):
 					e.apply_slow(0.5, 0.5)
 
 func _valid_pos(pos: Vector2) -> bool:
-	if pos.y < 80 or pos.y > 340 or pos.x < 50 or pos.x > 1150:
+	if pos.y < 80 or pos.y > 600 or pos.x < 50 or pos.x > 1200:
 		return false
 	for i in range(path_points.size() - 1):
 		var dist = _dist_to_seg(pos, path_points[i], path_points[i+1])
