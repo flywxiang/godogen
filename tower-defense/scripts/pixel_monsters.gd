@@ -36,8 +36,13 @@ static func get_monster_config(monster_type: String) -> Dictionary:
 # 创建像素怪物节点
 static func create_monster(monster_type: String) -> Node2D:
 	var config = get_monster_config(monster_type)
+	
+	# 加载enemy脚本并创建节点
+	var enemy_scene = load("res://scripts/enemy.gd")
 	var monster = Node2D.new()
-	monster.set("monster_type", monster_type)
+	monster.set_script(enemy_scene)
+	
+	monster.set("enemy_type", monster_type)
 	monster.set("config", config)
 	
 	# 创建像素身体

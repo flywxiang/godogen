@@ -55,8 +55,11 @@ func _load_map():
 		current_map = map_scene.instantiate()
 		$MapContainer.add_child(current_map)
 		
-		if current_map.has("map_name"):
-			$UI/TopBarBG/TopBar/LevelName.text = current_map.map_name
+		# 尝试获取关卡名称
+		if current_map:
+			var level_name = current_map.get("map_name")
+			if level_name:
+				$UI/TopBarBG/TopBar/LevelName.text = str(level_name)
 	else:
 		print("Failed to load map: ", map_path)
 	

@@ -1,2 +1,2 @@
-res://scripts/game.gd
+res://scripts/ui/level_select.gd
 res://scripts/game_new.gd
