@@ -13,16 +13,16 @@ var game_over: bool = false
 var selected_tower_type: String = ""
 
 const TOWER_TYPES = {
-	"arrow": {"cost": 50, "damage": 10, "range": 150, "fire_rate": 1.2, "color": Color(0.3, 0.7, 0.3), "icon": "🏹"},
-	"cannon": {"cost": 100, "damage": 30, "range": 120, "fire_rate": 0.5, "color": Color(0.9, 0.5, 0.2), "icon": "💣"},
-	"magic": {"cost": 80, "damage": 15, "range": 180, "fire_rate": 0.8, "color": Color(0.5, 0.3, 0.9), "icon": "✨"}
+	"arrow": {"cost": 50, "damage": 10, "range": 150, "fire_rate": 1.2, "color": Color(0.3, 0.7, 0.3)},
+	"cannon": {"cost": 100, "damage": 30, "range": 120, "fire_rate": 0.5, "color": Color(0.9, 0.5, 0.2)},
+	"magic": {"cost": 80, "damage": 15, "range": 180, "fire_rate": 0.8, "color": Color(0.5, 0.3, 0.9)}
 }
 
 const ENEMY_TYPES = {
-	"normal": {"health": 100, "speed": 100, "reward": 10, "icon": "👹", "color": Color(0.9, 0.3, 0.3)},
-	"fast": {"health": 60, "speed": 160, "reward": 15, "icon": "⚡", "color": Color(1, 0.8, 0.2)},
-	"armor": {"health": 200, "speed": 60, "reward": 25, "icon": "🛡️", "color": Color(0.5, 0.5, 0.6)},
-	"magic_resist": {"health": 120, "speed": 90, "reward": 20, "icon": "🔮", "color": Color(0.4, 0.2, 0.6)}
+	"normal": {"health": 100, "speed": 100, "reward": 10},
+	"fast": {"health": 60, "speed": 160, "reward": 15},
+	"armor": {"health": 200, "speed": 60, "reward": 25},
+	"magic_resist": {"health": 120, "speed": 90, "reward": 20}
 }
 
 func _ready():
@@ -164,32 +164,14 @@ func _place_tower(pos: Vector2):
 	
 	gold -= td.cost
 	
-	# 创建塔容器
-	var tower = Node2D.new()
-	tower.position = pos
-	
-	# 塔底座
-	var base = ColorRect.new()
-	base.size = Vector2(50, 50)
-	base.color = Color(0.3, 0.3, 0.35)
-	tower.add_child(base)
-	
-	# 塔图标（用Label模拟emoji）
-	var icon = Label.new()
-	icon.text = td.icon
-	icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	icon.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	icon.size = Vector2(50, 50)
-	icon.position = Vector2(0, -5)
-	icon.add_theme_font_size_override("font_size", 36)
-	tower.add_child(icon)
+	# 创建像素风格塔
+	var tower = _create_pixel_tower(selected_tower_type, pos)
 	
 	tower.set("tower_type", selected_tower_type)
 	tower.set("damage", td.damage)
 	tower.set("range", td.range)
 	tower.set("fire_rate", td.fire_rate)
 	tower.set("fire_cooldown", 0.0)
-	tower.set("tower_icon", td.icon)
 	
 	add_child(tower)
 	towers.append(tower)
@@ -222,45 +204,33 @@ func _on_start_wave():
 
 func _spawn_enemy(type: String):
 	var edata = ENEMY_TYPES.get(type, ENEMY_TYPES["normal"])
-	var enemy = Node2D.new()
 	
-	# 敌人底座
-	var base = ColorRect.new()
-	base.size = Vector2(35, 35)
-	base.color = edata.color
-	enemy.add_child(base)
+	# 使用像素怪物工厂创建
+	var enemy = PixelMonster.create_monster(type)
 	
-	# 敌人图标
-	var icon = Label.new()
-	icon.text = edata.icon
-	icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	icon.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	icon.size = Vector2(35, 35)
-	icon.position = Vector2(0, -3)
-	icon.add_theme_font_size_override("font_size", 28)
-	enemy.add_child(icon)
-	
-	# 生命条背景
+	# 添加生命条
 	var hp_bg = ColorRect.new()
-	hp_bg.size = Vector2(35, 5)
-	hp_bg.position = Vector2(-17, -25)
-	hp_bg.color = Color(0.2, 0.2, 0.2)
+	hp_bg.size = Vector2(40, 6)
+	hp_bg.position = Vector2(-20, -35)
+	hp_bg.color = Color(0.15, 0.15, 0.15)
 	enemy.add_child(hp_bg)
 	
-	# 生命条
 	var hp_bar = ColorRect.new()
-	hp_bar.size = Vector2(35, 5)
-	hp_bar.position = Vector2(-17, -25)
+	hp_bar.size = Vector2(40, 6)
+	hp_bar.position = Vector2(-20, -35)
 	hp_bar.color = Color(0.2, 0.9, 0.2)
 	hp_bar.set("hp_bar", true)
 	enemy.add_child(hp_bar)
+	
+	# 行走动画计时器
+	enemy.set("walk_timer", 0.0)
+	enemy.set("walk_offset", 0.0)
 	
 	enemy.set("enemy_type", type)
 	enemy.set("max_health", edata.health)
 	enemy.set("health", edata.health)
 	enemy.set("speed", edata.speed)
 	enemy.set("reward", edata.reward)
-	enemy.set("enemy_icon", edata.icon)
 	enemy.set("path_index", 0)
 	enemy.set("path_progress", 0.0)
 	enemy.set("reached_end", false)
@@ -299,12 +269,21 @@ func move_along_path(path_points: Array):
 	self.set("path_index", idx)
 	self.set("path_progress", progress)
 	
+	# 行走动画
+	var walk_timer = self.get("walk_timer", 0.0) + get_process_delta_time()
+	self.set("walk_timer", walk_timer)
+	var walk_offset = sin(walk_timer * 10) * 2
+	self.set("walk_offset", walk_offset)
+	
+	# 上下浮动效果
+	position.y += walk_offset * get_process_delta_time()
+	
 	# 更新生命条
 	for child in get_children():
 		if child.has("hp_bar") and child.hp_bar:
 			var hp = self.get("health")
 			var max_hp = self.get("max_health")
-			child.size.x = 35 * (hp / max_hp) if max_hp > 0 else 0
+			child.size.x = 40 * (hp / max_hp) if max_hp > 0 else 0
 
 # 特效动画更新
 func _process_effects(delta: float):
@@ -333,6 +312,68 @@ func _on_pause():
 
 func _on_shop():
 	show_msg("🏪 商店功能开发中...")
+
+func _create_pixel_tower(type: String, pos: Vector2) -> Node2D:
+	var td = TOWER_TYPES.get(type)
+	var tower = Node2D.new()
+	tower.position = pos
+	
+	# 塔底座
+	var base = ColorRect.new()
+	base.size = Vector2(45, 45)
+	base.color = Color(0.25, 0.25, 0.3)
+	tower.add_child(base)
+	
+	match type:
+		"arrow":
+			# 箭塔 - 细长型
+			var body = ColorRect.new()
+			body.size = Vector2(12, 30)
+			body.position = Vector2(-6, -25)
+			body.color = td.color
+			tower.add_child(body)
+			
+			var tip = Polygon2D.new()
+			tip.polygon = PackedVector2Array([
+				Vector2(0, -35),
+				Vector2(-8, -25),
+				Vector2(8, -25)
+			])
+			tip.color = td.color.darkened(0.2)
+			tower.add_child(tip)
+			
+		"cannon":
+			# 炮塔 - 圆胖型
+			var body = ColorRect.new()
+			body.size = Vector2(28, 22)
+			body.position = Vector2(-14, -22)
+			body.color = td.color
+			tower.add_child(body)
+			
+			var barrel = ColorRect.new()
+			barrel.size = Vector2(10, 18)
+			barrel.position = Vector2(-5, -40)
+			barrel.color = td.color.darkened(0.3)
+			tower.add_child(barrel)
+			
+		"magic":
+			# 魔塔 - 尖顶型
+			var body = ColorRect.new()
+			body.size = Vector2(24, 24)
+			body.position = Vector2(-12, -18)
+			body.color = td.color
+			tower.add_child(body)
+			
+			var crystal = Polygon2D.new()
+			crystal.polygon = PackedVector2Array([
+				Vector2(0, -38),
+				Vector2(-10, -18),
+				Vector2(10, -18)
+			])
+			crystal.color = td.color.lightened(0.3)
+			tower.add_child(crystal)
+	
+	return tower
 
 func _on_toggle_music():
 	var music = get("music_manager")

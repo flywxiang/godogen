@@ -40,7 +40,7 @@ theme_override_colors/font_outline_color = Color(0.8, 0.6, 0.1, 1)
 theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 72
 horizontal_alignment = 1
-text = "🏰 塔防游戏"
+text = "Tower Defense"
 
 [node name="Subtitle" type="Label" parent="CenterContainer/VBox"]
 layout_mode = 2
@@ -87,9 +87,9 @@ custom_minimum_size = Vector2(0, 60)
 [node name="MonsterIcons" type="Label" parent="CenterContainer/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 0.5, 0.6, 1)
-theme_override_font_sizes/font_size = 48
+theme_override_font_sizes/font_size = 32
 horizontal_alignment = 1
-text = "👹  👻  💚  ⭐  🐉"
+text = "Pixel Monsters Preview"
 
 [node name="Footer" type="Label" parent="."]
 anchors_horizontal_center = 0.5

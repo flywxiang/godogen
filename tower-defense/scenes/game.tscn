@@ -130,7 +130,7 @@ size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.3, 0.7, 0.3, 1)
 theme_override_colors/font_hover_color = Color(0.5, 1, 0.5, 1)
 theme_override_font_sizes/font_size = 22
-text = "🏹 50g"
+text = "箭塔 50g"
 
 [node name="TowerCannon" type="Button" parent="UI/TowerPanelBG/TowerPanel"]
 layout_mode = 2
@@ -138,7 +138,7 @@ size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.9, 0.5, 0.2, 1)
 theme_override_colors/font_hover_color = Color(1, 0.7, 0.4, 1)
 theme_override_font_sizes/font_size = 22
-text = "💣 100g"
+text = "炮塔 100g"
 
 [node name="TowerMagic" type="Button" parent="UI/TowerPanelBG/TowerPanel"]
 layout_mode = 2
@@ -146,7 +146,7 @@ size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.5, 0.3, 0.9, 1)
 theme_override_colors/font_hover_color = Color(0.7, 0.5, 1, 1)
 theme_override_font_sizes/font_size = 22
-text = "✨ 80g"
+text = "魔塔 80g"
 
 [node name="StartWaveButton" type="Button" parent="UI"]
 anchors_horizontal_center = 0.5
@@ -174,6 +174,6 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(0.7, 0.7, 0.8, 1)
 theme_override_font_sizes/font_size = 16
-text = "🏹 选择塔 → 点地图放置
-🛡️ 敌人：👹⚡🛡️🔮
-💡 点击塔可升级"
+text = "选择塔 → 点地图放置
+敌人类型：红球/黄三角/蓝方/紫菱
+点击塔可升级"
