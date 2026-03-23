@@ -13,6 +13,8 @@ var walk_timer: float = 0.0
 var walk_offset: float = 0.0
 var armor: float = 0.0
 var magic_resist: float = 0.0
+var slow_amount: float = 0.0
+var slow_timer: float = 0.0
 
 func move_along_path(path_points: Array):
 	if path_points.is_empty():
@@ -22,11 +24,19 @@ func move_along_path(path_points: Array):
 		reached_end = true
 		return
 	
+	# 更新减速状态
+	if slow_timer > 0:
+		slow_timer -= get_process_delta_time()
+	else:
+		slow_amount = 0.0
+	
+	var current_speed = speed * (1.0 - slow_amount)
+	
 	var p1 = path_points[path_index]
 	var p2 = path_points[path_index + 1]
 	var segment_length = p1.distance_to(p2)
 	
-	path_progress += speed * get_process_delta_time()
+	path_progress += current_speed * get_process_delta_time()
 	
 	if path_progress >= segment_length:
 		path_progress -= segment_length
@@ -46,6 +56,10 @@ func move_along_path(path_points: Array):
 	for child in get_children():
 		if child.has("hp_bar") and child.hp_bar:
 			child.size.x = 40 * (health / max_health) if max_health > 0 else 0
+
+func apply_slow(amount: float, duration: float):
+	slow_amount = max(slow_amount, amount)
+	slow_timer = duration
 
 func take_damage(amount: float):
 	# 考虑护甲

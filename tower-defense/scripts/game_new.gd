@@ -12,6 +12,15 @@ var wave_in_progress: bool = false
 var game_over: bool = false
 var selected_tower_type: String = ""
 
+# 技能系统
+var skill_cooldowns: Dictionary = {
+	"lightning": 0.0,
+	"freeze": 0.0,
+	"heal": 0.0
+}
+var skill_bonus_damage: float = 1.0
+var skill_bonus_speed: float = 1.0
+
 const TOWER_TYPES = {
 	"arrow": {"cost": 50, "damage": 10, "range": 150, "fire_rate": 1.2, "color": Color(0.3, 0.7, 0.3)},
 	"cannon": {"cost": 100, "damage": 30, "range": 120, "fire_rate": 0.5, "color": Color(0.9, 0.5, 0.2)},
@@ -44,6 +53,9 @@ func _setup_buttons():
 	$UI/ButtonPanel/PauseButton.pressed.connect(_on_pause)
 	$UI/ButtonPanel/ShopButton.pressed.connect(_on_shop)
 	$UI/ButtonPanel/MusicButton.pressed.connect(_on_toggle_music)
+	$UI/SkillPanel/SkillLightning.pressed.connect(_on_skill_lightning)
+	$UI/SkillPanel/SkillFreeze.pressed.connect(_on_skill_freeze)
+	$UI/SkillPanel/SkillHeal.pressed.connect(_on_skill_heal)
 
 func _load_map():
 	var map_path = Global.selected_map
@@ -66,6 +78,11 @@ func _load_map():
 	_update_ui()
 
 func _process(delta: float):
+	# 更新技能冷却
+	for skill in skill_cooldowns:
+		skill_cooldowns[skill] = max(0, skill_cooldowns[skill] - delta)
+	_update_skill_ui()
+	
 	if game_over:
 		return
 	
@@ -365,7 +382,106 @@ func _on_pause():
 	show_msg("暂停" if get_tree().paused else "继续")
 
 func _on_shop():
-	show_msg("商店功能开发中...")
+	var shop = load("res://scenes/ui/shop_panel.tscn").instantiate()
+	shop.item_purchased.connect(_on_shop_item)
+	add_child(shop)
+	shop.show_shop(gold)
+
+func _on_shop_item(item_type: String):
+	match item_type:
+		"heal":
+			if gold >= 50 and lives < 100:
+				gold -= 50
+				lives = min(100, lives + 30)
+				show_msg("❤️ 生命+30")
+		"shield":
+			if gold >= 100:
+				gold -= 100
+				lives += 50
+				show_msg("🛡️ 生命+50")
+		"speed":
+			if gold >= 80:
+				gold -= 80
+				skill_bonus_speed *= 1.2
+				show_msg("⚡ 攻速+20%")
+		"damage":
+			if gold >= 120:
+				gold -= 120
+				skill_bonus_damage *= 1.2
+				show_msg("⚔️ 伤害+20%")
+	_update_ui()
+
+# 技能系统
+func _on_skill_lightning():
+	if skill_cooldowns["lightning"] > 0:
+		show_msg("技能冷却中...")
+		return
+	skill_cooldowns["lightning"] = 15.0
+	# 对所有敌人造成伤害
+	for enemy in enemies:
+		if is_instance_valid(enemy):
+			enemy.take_damage(50 * skill_bonus_damage)
+	_create_skill_effect("lightning")
+	show_msg("⚡ 雷电打击！")
+
+func _on_skill_freeze():
+	if skill_cooldowns["freeze"] > 0:
+		show_msg("技能冷却中...")
+		return
+	skill_cooldowns["freeze"] = 20.0
+	for enemy in enemies:
+		if is_instance_valid(enemy):
+			enemy.apply_slow(0.9, 3.0)
+	_create_skill_effect("freeze")
+	show_msg("❄️ 冰冻！敌人减速3秒")
+
+func _on_skill_heal():
+	if skill_cooldowns["heal"] > 0:
+		show_msg("技能冷却中...")
+		return
+	skill_cooldowns["heal"] = 30.0
+	lives = min(100, lives + 30)
+	_create_skill_effect("heal")
+	show_msg("💚 治疗！生命+30")
+	_update_ui()
+
+func _update_skill_ui():
+	$UI/SkillPanel/SkillLightning.text = "⚡%ds" % int(skill_cooldowns["lightning"])
+	$UI/SkillPanel/SkillFreeze.text = "❄️%ds" % int(skill_cooldowns["freeze"])
+	$UI/SkillPanel/SkillHeal.text = "💚%ds" % int(skill_cooldowns["heal"])
+	
+	$UI/SkillPanel/SkillLightning.disabled = skill_cooldowns["lightning"] > 0
+	$UI/SkillPanel/SkillFreeze.disabled = skill_cooldowns["freeze"] > 0
+	$UI/SkillPanel/SkillHeal.disabled = skill_cooldowns["heal"] > 0
+
+func _create_skill_effect(type: String):
+	# 技能特效
+	var effect = Node2D.new()
+	effect.position = Vector2(640, 360)
+	add_child(effect)
+	
+	if type == "lightning":
+		for i in range(5):
+			var line = ColorRect.new()
+			line.size = Vector2(1280, 4)
+			line.color = Color(1, 1, 0.2, 0.8)
+			line.position = Vector2(-640, randf() * 720 - 360)
+			effect.add_child(line)
+	elif type == "freeze":
+		var circle = ColorRect.new()
+		circle.size = Vector2(720, 720)
+		circle.color = Color(0.5, 0.8, 1, 0.3)
+		circle.position = Vector2(-360, -360)
+		effect.add_child(circle)
+	elif type == "heal":
+		var heal = ColorRect.new()
+		heal.size = Vector2(720, 720)
+		heal.color = Color(0.2, 1, 0.3, 0.3)
+		heal.position = Vector2(-360, -360)
+		effect.add_child(heal)
+	
+	await get_tree().create_timer(0.5).timeout
+	effect.queue_free()
 
 func _on_toggle_music():
 	var music = get("music_manager")
