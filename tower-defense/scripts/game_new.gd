@@ -128,6 +128,13 @@ func _process(delta: float):
 			
 			if enemy.is_dead:
 				to_remove_enemy.append(enemy)
+			elif enemy.reached_end:
+				lives -= 1
+				to_remove_enemy.append(enemy)
+				show_msg("💔 敌人突破！生命-%d" % 1)
+				_update_ui()
+				if lives <= 0:
+					_trigger_game_over()
 		else:
 			to_remove_enemy.append(enemy)
 	
@@ -491,8 +498,30 @@ func _on_toggle_music():
 
 func _trigger_victory():
 	game_over = true
-	show_msg("🎉 通关胜利！")
 	_update_ui()
+	
+	# 保存进度
+	Global.unlock_level(Global.selected_level)
+	
+	# 显示结算界面
+	var gold_reward = 100 + Global.selected_level * 50
+	var stars = 1
+	if lives >= 10:
+		stars = 2
+	if lives >= 15 and gold >= 200:
+		stars = 3
+	
+	var game_over_scene = load("res://scenes/ui/game_over.tscn").instantiate()
+	game_over_scene.setup(true, wave, lives, gold_reward)
+	add_child(game_over_scene)
+
+func _trigger_game_over():
+	game_over = true
+	_update_ui()
+	
+	var game_over_scene = load("res://scenes/ui/game_over.tscn").instantiate()
+	game_over_scene.setup(false, wave, lives, 0)
+	add_child(game_over_scene)
 
 func _update_ui():
 	$UI/TopBarBG/TopBar/GoldLabel.text = "💰 %d" % gold
