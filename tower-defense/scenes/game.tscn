@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://gamescene"]
+[gd_scene load_steps=2 format=3 uid="uid://gamescene"]
 
 [ext_resource type="Script" path="res://scripts/game_new.gd" id="1"]
 
@@ -10,19 +10,20 @@ script = ExtResource("1")
 [node name="UI" type="CanvasLayer" parent="."]
 
 [node name="TopBarBG" type="ColorRect" parent="UI"]
-offset_right = 1080.0
-offset_bottom = 70.0
+anchors_horizontal_center = 0.5
+offset_top = 0.0
+size_flags_horizontal = 3
+size_flags_vertical = 0
+custom_minimum_size = Vector2(0, 70)
 color = Color(0.1, 0.15, 0.25, 0.95)
 
-[node name="TopBar" type="HBoxContainer" parent="UI/TopBar"]
+[node name="TopBar" type="HBoxContainer" parent="UI/TopBarBG"]
 anchors_horizontal_center = 0.5
-offset_left = 100.0
-offset_top = 5.0
-offset_right = 980.0
-offset_bottom = 65.0
+anchors_vertical_center = 0.5
+size_flags_horizontal = 3
 theme_override_constants/separation = 50
 
-[node name="LevelName" type="Label" parent="UI/TopBar"]
+[node name="LevelName" type="Label" parent="UI/TopBarBG/TopBar"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
@@ -31,7 +32,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 text = "新手村"
 
-[node name="GoldLabel" type="Label" parent="UI/TopBar"]
+[node name="GoldLabel" type="Label" parent="UI/TopBarBG/TopBar"]
 layout_mode = 2
 size_flags_horizontal = 2
 theme_override_colors/font_color = Color(1, 0.9, 0.3, 1)
@@ -40,7 +41,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 text = "💰 200"
 
-[node name="LivesLabel" type="Label" parent="UI/TopBar"]
+[node name="LivesLabel" type="Label" parent="UI/TopBarBG/TopBar"]
 layout_mode = 2
 size_flags_horizontal = 2
 theme_override_colors/font_color = Color(1, 0.4, 0.4, 1)
@@ -49,7 +50,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 text = "❤️ 20"
 
-[node name="WaveLabel" type="Label" parent="UI/TopBar"]
+[node name="WaveLabel" type="Label" parent="UI/TopBarBG/TopBar"]
 layout_mode = 2
 size_flags_horizontal = 2
 theme_override_colors/font_color = Color(0.5, 0.8, 1, 1)
@@ -58,47 +59,43 @@ horizontal_alignment = 1
 vertical_alignment = 1
 text = "🌊 0/10"
 
-[node name="BackButton" type="Button" parent="UI"]
-offset_left = 10.0
+[node name="ButtonPanel" type="HBoxContainer" parent="UI"]
+anchors_horizontal_center = 0.5
 offset_top = 10.0
-offset_right = 70.0
-offset_bottom = 55.0
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="BackButton" type="Button" parent="UI/ButtonPanel"]
+custom_minimum_size = Vector2(60, 45)
+layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.8, 1)
 theme_override_font_sizes/font_size = 24
 text = "←"
 
-[node name="PauseButton" type="Button" parent="UI"]
-offset_left = 80.0
-offset_top = 10.0
-offset_right = 140.0
-offset_bottom = 55.0
+[node name="PauseButton" type="Button" parent="UI/ButtonPanel"]
+custom_minimum_size = Vector2(60, 45)
+layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 theme_override_font_sizes/font_size = 24
 text = "⏸️"
 
-[node name="ShopButton" type="Button" parent="UI"]
-offset_left = 150.0
-offset_top = 10.0
-offset_right = 220.0
-offset_bottom = 55.0
+[node name="ShopButton" type="Button" parent="UI/ButtonPanel"]
+custom_minimum_size = Vector2(60, 45)
+layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.9, 0.3, 1)
 theme_override_font_sizes/font_size = 24
 text = "🏪"
 
-[node name="SkillButton" type="Button" parent="UI"]
-offset_left = 230.0
-offset_top = 10.0
-offset_right = 300.0
-offset_bottom = 55.0
+[node name="SkillButton" type="Button" parent="UI/ButtonPanel"]
+custom_minimum_size = Vector2(60, 45)
+layout_mode = 2
 theme_override_colors/font_color = Color(0.6, 0.5, 1, 1)
 theme_override_font_sizes/font_size = 24
 text = "⚡"
 
-[node name="MusicButton" type="Button" parent="UI"]
-offset_left = 310.0
-offset_top = 10.0
-offset_right = 380.0
-offset_bottom = 55.0
+[node name="MusicButton" type="Button" parent="UI/ButtonPanel"]
+custom_minimum_size = Vector2(60, 45)
+layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.3, 0.5, 1)
 theme_override_font_sizes/font_size = 24
 text = "🎵"
@@ -106,10 +103,6 @@ text = "🎵"
 [node name="MessageLabel" type="Label" parent="UI"]
 anchors_horizontal_center = 0.5
 anchors_vertical_center = 0.5
-offset_left = -200.0
-offset_top = -20.0
-offset_right = 200.0
-offset_bottom = 20.0
 theme_override_colors/font_color = Color(1, 1, 0.2, 1)
 theme_override_colors/font_outline_color = Color(0.5, 0.5, 0, 1)
 theme_override_constants/outline_size = 2
@@ -119,21 +112,19 @@ vertical_alignment = 1
 
 [node name="TowerPanelBG" type="ColorRect" parent="UI"]
 anchors_horizontal_center = 0.5
-offset_left = -200.0
-offset_top = 610.0
-offset_right = 200.0
-offset_bottom = 700.0
+anchors_vertical_center = 1.0
+offset_bottom = -80.0
+size_flags_horizontal = 4
+custom_minimum_size = Vector2(500, 60)
 color = Color(0.1, 0.15, 0.25, 0.9)
 
-[node name="TowerPanel" type="HBoxContainer" parent="UI"]
+[node name="TowerPanel" type="HBoxContainer" parent="UI/TowerPanelBG"]
 anchors_horizontal_center = 0.5
-offset_left = -195.0
-offset_top = 615.0
-offset_right = 195.0
-offset_bottom = 695.0
+anchors_vertical_center = 0.5
+size_flags_horizontal = 3
 theme_override_constants/separation = 20
 
-[node name="TowerArrow" type="Button" parent="UI/TowerPanel"]
+[node name="TowerArrow" type="Button" parent="UI/TowerPanelBG/TowerPanel"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.3, 0.7, 0.3, 1)
@@ -141,7 +132,7 @@ theme_override_colors/font_hover_color = Color(0.5, 1, 0.5, 1)
 theme_override_font_sizes/font_size = 22
 text = "🏹 50g"
 
-[node name="TowerCannon" type="Button" parent="UI/TowerPanel"]
+[node name="TowerCannon" type="Button" parent="UI/TowerPanelBG/TowerPanel"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.9, 0.5, 0.2, 1)
@@ -149,7 +140,7 @@ theme_override_colors/font_hover_color = Color(1, 0.7, 0.4, 1)
 theme_override_font_sizes/font_size = 22
 text = "💣 100g"
 
-[node name="TowerMagic" type="Button" parent="UI/TowerPanel"]
+[node name="TowerMagic" type="Button" parent="UI/TowerPanelBG/TowerPanel"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.5, 0.3, 0.9, 1)
@@ -158,28 +149,31 @@ theme_override_font_sizes/font_size = 22
 text = "✨ 80g"
 
 [node name="StartWaveButton" type="Button" parent="UI"]
-offset_left = 10.0
-offset_top = 710.0
-offset_right = 500.0
-offset_bottom = 780.0
+anchors_horizontal_center = 0.5
+anchors_vertical_center = 1.0
+offset_bottom = -10.0
+size_flags_horizontal = 4
 theme_override_colors/font_color = Color(0.2, 1, 0.2, 1)
 theme_override_colors/font_hover_color = Color(0.5, 1, 0.5, 1)
 theme_override_font_sizes/font_size = 32
 text = "▶ 开始波次"
 
 [node name="InfoPanel" type="PanelContainer" parent="UI"]
-offset_left = 510.0
-offset_top = 620.0
-offset_right = 1070.0
-offset_bottom = 770.0
+anchors_horizontal_center = 1.0
+anchors_vertical_center = 1.0
+offset_left = -200.0
+offset_right = -10.0
+offset_bottom = -150.0
+size_flags_vertical = 4
 
 [node name="Panel" type="Panel" parent="UI/InfoPanel"]
 modulate = Color(0.1, 0.15, 0.25, 0.8)
 
 [node name="InfoLabel" type="Label" parent="UI/InfoPanel"]
 layout_mode = 2
+size_flags_vertical = 3
 theme_override_colors/font_color = Color(0.7, 0.7, 0.8, 1)
 theme_override_font_sizes/font_size = 16
 text = "🏹 选择塔 → 点地图放置
-🛡️ 敌人类型：👹普通 ⚡快速 🛡️装甲 🔮魔抗
-💡 点击塔可升级或出售"
+🛡️ 敌人：👹⚡🛡️🔮
+💡 点击塔可升级"

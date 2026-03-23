@@ -16,20 +16,23 @@ func _ready():
 	_setup_buttons()
 
 func _setup_buttons():
-	$Grid/Level1.pressed.connect(_on_level_selected.bind(1))
-	$Grid/Level2.pressed.connect(_on_level_selected.bind(2))
-	$Grid/Level3.pressed.connect(_on_level_selected.bind(3))
-	$Grid/Level4.pressed.connect(_on_level_selected.bind(4))
-	$Grid/Level5.pressed.connect(_on_level_selected.bind(5))
+	$CenterContainer/VBox/Grid/Level1.pressed.connect(_on_level_selected.bind(1))
+	$CenterContainer/VBox/Grid/Level2.pressed.connect(_on_level_selected.bind(2))
+	$CenterContainer/VBox/Grid/Level3.pressed.connect(_on_level_selected.bind(3))
+	$CenterContainer/VBox/Grid/Level4.pressed.connect(_on_level_selected.bind(4))
+	$CenterContainer/VBox/Grid/Level5.pressed.connect(_on_level_selected.bind(5))
 	$BackButton.pressed.connect(_on_back)
-	$DailyChallenge.pressed.connect(_on_daily_challenge)
+	$CenterContainer/VBox/DailyChallenge.pressed.connect(_on_daily_challenge)
 	
-	# 更新关卡按钮状态
 	_update_level_buttons()
 
 func _update_level_buttons():
 	var btns = [
-		$Grid/Level1, $Grid/Level2, $Grid/Level3, $Grid/Level4, $Grid/Level5
+		$CenterContainer/VBox/Grid/Level1, 
+		$CenterContainer/VBox/Grid/Level2, 
+		$CenterContainer/VBox/Grid/Level3, 
+		$CenterContainer/VBox/Grid/Level4, 
+		$CenterContainer/VBox/Grid/Level5
 	]
 	var unlocked = save_data.get("level_progress", [1])
 	

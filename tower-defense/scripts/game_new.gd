@@ -37,14 +37,14 @@ func _ready():
 	set("music_manager", music)
 
 func _setup_buttons():
-	$UI/TowerPanel/TowerArrow.pressed.connect(_on_select_arrow)
-	$UI/TowerPanel/TowerCannon.pressed.connect(_on_select_cannon)
-	$UI/TowerPanel/TowerMagic.pressed.connect(_on_select_magic)
+	$UI/TowerPanelBG/TowerPanel/TowerArrow.pressed.connect(_on_select_arrow)
+	$UI/TowerPanelBG/TowerPanel/TowerCannon.pressed.connect(_on_select_cannon)
+	$UI/TowerPanelBG/TowerPanel/TowerMagic.pressed.connect(_on_select_magic)
 	$UI/StartWaveButton.pressed.connect(_on_start_wave)
-	$UI/BackButton.pressed.connect(_on_back)
-	$UI/PauseButton.pressed.connect(_on_pause)
-	$UI/ShopButton.pressed.connect(_on_shop)
-	$UI/MusicButton.pressed.connect(_on_toggle_music)
+	$UI/ButtonPanel/BackButton.pressed.connect(_on_back)
+	$UI/ButtonPanel/PauseButton.pressed.connect(_on_pause)
+	$UI/ButtonPanel/ShopButton.pressed.connect(_on_shop)
+	$UI/ButtonPanel/MusicButton.pressed.connect(_on_toggle_music)
 
 func _load_map():
 	var map_path = Global.selected_map
@@ -152,7 +152,7 @@ func _on_select_magic():
 
 func _update_tower_buttons():
 	var colors = {"arrow": Color(0.3, 0.7, 0.3), "cannon": Color(0.9, 0.5, 0.2), "magic": Color(0.5, 0.3, 0.9)}
-	var btns = {"arrow": $UI/TowerPanel/TowerArrow, "cannon": $UI/TowerPanel/TowerCannon, "magic": $UI/TowerPanel/TowerMagic}
+	var btns = {"arrow": $UI/TowerPanelBG/TowerPanel/TowerArrow, "cannon": $UI/TowerPanelBG/TowerPanel/TowerCannon, "magic": $UI/TowerPanelBG/TowerPanel/TowerMagic}
 	for t in ["arrow", "cannon", "magic"]:
 		btns[t].modulate = colors[t] if selected_tower_type == t else Color(1, 1, 1)
 
